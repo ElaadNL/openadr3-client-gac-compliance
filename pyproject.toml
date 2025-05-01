@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.12, <4"
 dependencies = [
     "pydantic (>=2.11.2,<3.0.0)",
-    "openadr3-client @ file:///Users/nickvandeburgt/Documents/klanten/elaadNL/Innovatie/openadr3-client/dist/openadr3_client-0.1.0.tar.gz"
+    "openadr3-client @ file:///Users/nickvandeburgt/Documents/klanten/elaadNL/Innovatie/openadr3-client/dist/openadr3_client-0.1.0.tar.gz",
 ]
 
 [build-system]
@@ -21,3 +21,7 @@ mypy = "^1.15.0"
 ruff = "^0.11.4"
 pytest = "^8.3.5"
 pytest-cov = "^6.1.1"
+
+[[tool.mypy.overrides]]
+module = ["openadr3_client"]
+ignore_missing_imports = true
