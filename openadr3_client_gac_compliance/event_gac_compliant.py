@@ -1,13 +1,21 @@
-"""Module which implements GAC compliance validators for the event OpenADR3 types."""
+"""Module which implements GAC compliance validators for the event OpenADR3 types.
+
+This module validates all the object constraints and requirements on the OpenADR3 events resource
+as specified in the Grid aware charging (GAC) specification.
+
+There is one requirement that is not validated here, as it cannot be validated through the scope of the
+pydantic validators. Namely, the requirement that a safe mode event MUST be present in a program.
+
+As the pydantic validator works on the scope of a single Event Object, it is not possible to validate
+that a safe mode event is present in a program. And it cannot be validated on the Program object,
+as the program object does not contain the events, these are stored seperately in the VTN.
+"""
 
 from itertools import pairwise
 import re
 from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
 from openadr3_client.models.event.event import Event
 from openadr3_client.models.event.event_payload import EventPayloadType
-
-# TODO: How to validate for safe mode event being present in a program?
-# That goes outside of the scope of what pydantic validators can enforce.
 
 def _continuous_or_seperated(self: Event) -> Event:
     """Enforces that events either have consistent interval definitions compliant with GAC.
