@@ -1,10 +1,12 @@
 """Module which implements GAC compliance validators for the event OpenADR3 types."""
 
+from itertools import pairwise
+import re
 from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
 from openadr3_client.models.event.event import Event
+from openadr3_client.models.event.event_payload import EventPayloadType
 
-@ValidatorRegistry.register(Event, ValidatorModel())
-def continuous_or_seperated(self: Event) -> Event:
+def _continuous_or_seperated(self: Event) -> Event:
     """Enforces that events either have consistent interval definitions compliant with GAC.
     
     the Grid aware charging (GAC) specification allows for two types of (mutually exclusive)
@@ -45,3 +47,124 @@ def continuous_or_seperated(self: Event) -> Event:
             )
 
     return self
+
+def _targets_compliant(self: Event) -> Event:
+    """Enforces that the targets of the event are compliant with GAC.
+    
+    GAC enforces the following constraints for targets:
+    
+    - The event must contain a POWER_SERVICE_LOCATIONS target.
+    - The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.
+    - The event must contain a VEN_NAME target.
+    - The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).
+    """
+    targets = self.targets or ()
+
+    power_service_locations = [t for t in targets if t.type == "POWER_SERVICE_LOCATIONS"]
+    ven_names = [t for t in targets if t.type == "VEN_NAME"]
+
+    if not power_service_locations:
+        raise ValueError("The event must contain a POWER_SERVICE_LOCATIONS target.")
+    
+    if not ven_names:
+        raise ValueError("The event must contain a VEN_NAME target.")
+    
+    if len(power_service_locations) > 1:
+        raise ValueError("The event must contain only one POWER_SERVICE_LOCATIONS target.")
+    
+    if len(ven_names) > 1:
+        raise ValueError("The event must contain only one VEN_NAME target.")
+    
+    power_service_location = power_service_locations[0]
+    ven_name = ven_names[0]
+
+    if power_service_location.values is None:
+        raise ValueError("The POWER_SERVICE_LOCATIONS target value cannot be empty.")
+    
+    if not all(re.fullmatch(r"\d{18}", v) for v in power_service_location.values):
+        raise ValueError("The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.")
+
+    if ven_name.values is None:
+        raise ValueError("The VEN_NAME target value cannot be empty.")
+    
+    if not all(1 <= len(v) <= 128 for v in ven_name.values):
+        raise ValueError("The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).")
+    
+    return self
+
+def _payload_descriptor_gac_compliant(self: Event) -> Event:
+    """Enforces that the payload descriptor is GAC compliant.
+    
+    GAC enforces the following constraints for payload descriptors:
+
+    - The event interval must exactly one payload descriptor.
+    - The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'
+    - The payload descriptor must have a units of 'KW' (case sensitive).
+    """
+    if self.payload_descriptor is None:
+        raise ValueError("The event interval must have a payload descriptor.")
+    
+    if len(self.payload_descriptor) != 1:
+        raise ValueError("The event interval must have exactly one payload descriptor.")
+    
+    payload_descriptor = self.payload_descriptor[0]
+
+    if payload_descriptor.payload_type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
+        raise ValueError("The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.")
+    
+    if payload_descriptor.units != "KW":
+        raise ValueError("The payload descriptor must have a units of 'KW' (case sensitive).")
+    
+    return self
+
+def _event_interval_gac_compliant(self: Event) -> Event:
+    """Enforces that the event interval is GAC compliant.
+    
+    GAC enforces the following constraints for event intervals:
+    
+    - The event interval must have an id value that is strictly increasing.
+    - The event interval must have exactly one payload.
+    - The payload of the event interval must have a type of 'IMPORT_CAPACITY_LIMIT'
+    """
+    if not self.intervals:
+        raise ValueError("The event must have at least one interval.")
+    
+    if not all(curr.id > prev.id for prev, curr in pairwise(self.intervals)):
+        raise ValueError("The event interval must have an id value that is strictly increasing.")
+
+    for interval in self.intervals:
+        if interval.payloads is None:
+            raise ValueError("The event interval must have a payload.")
+        
+        if len(interval.payloads) != 1:
+            raise ValueError("The event interval must have exactly one payload.")
+        
+        payload = interval.payloads[0]
+
+        if payload.type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
+            raise ValueError("The payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.")
+    
+    return self
+
+@ValidatorRegistry.register(Event, ValidatorModel())
+def event_gac_compliant(self: Event) -> Event:
+    """Enforces that events are GAC compliant.
+    
+    GAC enforces the following constraints for events:
+    
+    - The event must have a priority set.
+    - The priority must be greater than or equal to 0 and less than or equal to 999.
+    - The event must have either a continuous or seperated interval definition.
+    """
+    if self.priority is None:
+        raise ValueError("The event must have a priority set.")
+    
+    if self.priority > 999:
+        raise ValueError("The priority must be greater than or equal to 0 and less than or equal to999.")
+    
+    interval_periods_validated = _continuous_or_seperated(self)
+    targets_validated = _targets_compliant(interval_periods_validated)
+    payload_descriptor_validated = _payload_descriptor_gac_compliant(targets_validated)
+    event_interval_validated = _event_interval_gac_compliant(payload_descriptor_validated)
+
+    return event_interval_validated
