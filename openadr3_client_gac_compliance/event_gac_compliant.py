@@ -6,6 +6,9 @@ from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorMo
 from openadr3_client.models.event.event import Event
 from openadr3_client.models.event.event_payload import EventPayloadType
 
+# TODO: How to validate for safe mode event being present in a program?
+# That goes outside of the scope of what pydantic validators can enforce.
+
 def _continuous_or_seperated(self: Event) -> Event:
     """Enforces that events either have consistent interval definitions compliant with GAC.
     
