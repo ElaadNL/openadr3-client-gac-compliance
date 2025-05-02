@@ -5,5 +5,5 @@ This repository contains a plugin for the [OpenADR3-client](https://github.com/E
 To use this plugin, the package must be imported once globally. We recommend doing this in your root directories `__init__.py` file.
 
 ```python
-import openadr3_client_gac_compliance # noqa: F401 (in case you use Ruff)
+import openadr3_client_gac_compliance  # noqa: F401 (in case you use ruff)
 ```
