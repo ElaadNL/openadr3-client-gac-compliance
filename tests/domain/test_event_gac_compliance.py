@@ -4,14 +4,6 @@ import pytest
 
 from typing import Tuple
 
-from openadr3_client_gac_compliance import *
-from openadr3_client_gac_compliance.event_gac_compliant import (
-    _continuous_or_seperated,
-    _targets_compliant,
-    _payload_descriptor_gac_compliant,
-    _event_interval_gac_compliant,
-    event_gac_compliant
-)
 from openadr3_client.models.common.interval_period import IntervalPeriod
 from openadr3_client.models.event.event import NewEvent
 from openadr3_client.models.event.event_payload import EventPayload, EventPayloadType, EventPayloadDescriptor

@@ -1,6 +1,6 @@
 """Module which implements GAC compliance validators for the program OpenADR3 types."""
 
-from openadr3_client.models.program import Program
+from openadr3_client.models.program.program import Program
 from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
 
 import re
@@ -33,5 +33,3 @@ def program_gac_compliant(self: Program) -> Program:
         raise ValueError("The program must have bindingEvents set to True.")
     
     return self
-# @ValidatorRegistry.register(Event, ValidatorModel())
-# def continuous_or_seperated(self: Event) -> Event:
