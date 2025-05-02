@@ -81,7 +81,7 @@ def _targets_compliant(self: Event) -> Event:
         raise ValueError("The event must contain a VEN_NAME target.")
     
     if len(power_service_locations) > 1:
-        raise ValueError("The event must contain only one POWER_SERVICE_LOCATIONS target.")
+        raise ValueError("The event must contain exactly one POWER_SERVICE_LOCATIONS target.")
     
     if len(ven_names) > 1:
         raise ValueError("The event must contain only one VEN_NAME target.")
@@ -89,13 +89,13 @@ def _targets_compliant(self: Event) -> Event:
     power_service_location = power_service_locations[0]
     ven_name = ven_names[0]
 
-    if power_service_location.values is None:
+    if len(power_service_location.values) == 0:
         raise ValueError("The POWER_SERVICE_LOCATIONS target value cannot be empty.")
     
     if not all(re.fullmatch(r"\d{18}", v) for v in power_service_location.values):
         raise ValueError("The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.")
 
-    if ven_name.values is None:
+    if len(ven_name.values) == 0:
         raise ValueError("The VEN_NAME target value cannot be empty.")
     
     if not all(1 <= len(v) <= 128 for v in ven_name.values):
@@ -113,10 +113,10 @@ def _payload_descriptor_gac_compliant(self: Event) -> Event:
     - The payload descriptor must have a units of 'KW' (case sensitive).
     """
     if self.payload_descriptor is None:
-        raise ValueError("The event interval must have a payload descriptor.")
+        raise ValueError("The event must have a payload descriptor.")
     
     if len(self.payload_descriptor) != 1:
-        raise ValueError("The event interval must have exactly one payload descriptor.")
+        raise ValueError("The event must have exactly one payload descriptor.")
     
     payload_descriptor = self.payload_descriptor[0]
 
@@ -153,7 +153,7 @@ def _event_interval_gac_compliant(self: Event) -> Event:
         payload = interval.payloads[0]
 
         if payload.type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
-            raise ValueError("The payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.")
+            raise ValueError("The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.")
     
     return self
 
@@ -171,7 +171,7 @@ def event_gac_compliant(self: Event) -> Event:
         raise ValueError("The event must have a priority set.")
     
     if self.priority > 999:
-        raise ValueError("The priority must be greater than or equal to 0 and less than or equal to999.")
+        raise ValueError("The priority must be greater than or equal to 0 and less than or equal to 999.")
     
     interval_periods_validated = _continuous_or_seperated(self)
     targets_validated = _targets_compliant(interval_periods_validated)
