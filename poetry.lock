@@ -552,7 +552,7 @@ optional = false
 python-versions = ">=3.12, <4"
 groups = ["main"]
 files = [
-    {file = "openadr3_client-0.1.0.tar.gz", hash = "sha256:635972e8e04abd64a0c6fd7b017515db34e249b2741cd2295704576c196d73b4"},
+    {file = "openadr3_client-0.1.0.tar.gz", hash = "sha256:577b7888e79f69ae2f4012e792dbd7a203015072354e5536cadb782c0b0fe587"},
 ]
 
 [package.dependencies]

@@ -5,10 +5,11 @@ from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorMo
 
 import re
 
+
 @ValidatorRegistry.register(Program, ValidatorModel())
 def program_gac_compliant(self: Program) -> Program:
     """Enforces that the program is GAC compliant.
-    
+
     GAC enforces the following constraints for programs:
     - The program must have a retailer name
     - The retailer name must be an EAN13 identifier.
@@ -23,13 +24,15 @@ def program_gac_compliant(self: Program) -> Program:
         raise ValueError("The program must have a retailer name.")
     if not re.fullmatch(r"\d{13}", self.retailer_name):
         raise ValueError("The retailer name must be an EAN13 identifier.")
-    
+
     if self.program_type is None:
         raise ValueError("The program must have a program type.")
     if not re.fullmatch(program_type_regex, self.program_type):
-        raise ValueError("The program type must follow the format DSO_CPO_INTERFACE-x.x.x.")
-    
+        raise ValueError(
+            "The program type must follow the format DSO_CPO_INTERFACE-x.x.x."
+        )
+
     if self.binding_events is False:
         raise ValueError("The program must have bindingEvents set to True.")
-    
+
     return self
