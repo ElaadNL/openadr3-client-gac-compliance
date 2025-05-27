@@ -2,7 +2,8 @@
 
 from decouple import config
 
-VALID_GAC_VERSIONS : list[str]= ["3.0"]
+VALID_GAC_VERSIONS: list[str] = ["3.0"]
+
 
 def _gac_version_cast(value: str) -> str:
     """Cast the GAC version to a string.
@@ -19,6 +20,7 @@ def _gac_version_cast(value: str) -> str:
     if value not in VALID_GAC_VERSIONS:
         raise ValueError(f"Invalid GAC version: {value}")
     return value
+
 
 # The GAC version to use for the compliance validators.
 GAC_VERSION = config("GAC_VERSION", default="3.0", cast=_gac_version_cast)
