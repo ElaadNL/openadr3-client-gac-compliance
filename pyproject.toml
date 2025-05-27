@@ -12,8 +12,6 @@ dependencies = [
     "openadr3-client (>=0.0.1,<0.0.2)",
 ]
 
-# TODO: remove local openadr3-client dependency when the openadr3-client package is published to pypi
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
