@@ -21,4 +21,4 @@ def _gac_version_cast(value: str) -> str:
     return value
 
 # The GAC version to use for the compliance validators.
-GAC_VERSION = config("GAC_VERSION", cast=_gac_version_cast)
+GAC_VERSION = config("GAC_VERSION", default="3.0", cast=_gac_version_cast)
