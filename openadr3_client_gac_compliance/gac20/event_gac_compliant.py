@@ -182,16 +182,12 @@ def event_gac_compliant(self: Event) -> Event:
 
     GAC enforces the following constraints for events:
 
-    - The event must have a priority set.
-    - The priority must be greater than or equal to 0 and less than or equal to 999.
+    - The event must not have a priority set.
     - The event must have either a continuous or seperated interval definition.
     """
-    if self.priority is None:
-        raise ValueError("The event must have a priority set.")
-
-    if self.priority > 999:
+    if self.priority is not None:
         raise ValueError(
-            "The priority must be greater than or equal to 0 and less than or equal to 999."
+            "The event must not have a priority set for GAC 2.0 compliance"
         )
 
     interval_periods_validated = _continuous_or_seperated(self)

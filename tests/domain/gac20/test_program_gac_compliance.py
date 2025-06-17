@@ -41,12 +41,22 @@ def test_missing_retailer_name() -> None:
         _ = _create_program(retailer_name=None)
 
 
-def test_invalid_retailer_name_format() -> None:
-    """Test that a program with an invalid retailer name format raises an error."""
+def test_retailer_name_too_short() -> None:
+    """Test that a program with a retailer name that is too short raises an error."""
     with pytest.raises(
-        ValidationError, match="The retailer name must be an EAN13 identifier."
+        ValidationError,
+        match="The retailer name must be between 2 and 128 characters long.",
     ):
-        _ = _create_program(retailer_name="invalid-ean")
+        _ = _create_program(retailer_name="1")
+
+
+def test_retailer_name_too_long() -> None:
+    """Test that a program with a retailer name that is too long raises an error."""
+    with pytest.raises(
+        ValidationError,
+        match="The retailer name must be between 2 and 128 characters long.",
+    ):
+        _ = _create_program(retailer_name="1" * 129)
 
 
 def test_missing_program_type() -> None:

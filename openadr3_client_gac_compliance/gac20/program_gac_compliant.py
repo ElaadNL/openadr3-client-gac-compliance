@@ -12,7 +12,7 @@ def program_gac_compliant(self: Program) -> Program:
 
     GAC enforces the following constraints for programs:
     - The program must have a retailer name
-    - The retailer name must be an EAN13 identifier.
+    - The retailer name must be between 2 and 128 characters long.
     - The program MUST have a programType.
     - The programType MUST equal "DSO_CPO_INTERFACE-x.x.x, where x.x.x is the version as defined in the GAC specification.
     - The program MUST have bindingEvents set to True.
@@ -22,8 +22,9 @@ def program_gac_compliant(self: Program) -> Program:
 
     if self.retailer_name is None:
         raise ValueError("The program must have a retailer name.")
-    if not re.fullmatch(r"\d{13}", self.retailer_name):
-        raise ValueError("The retailer name must be an EAN13 identifier.")
+
+    if len(self.retailer_name) < 2 or len(self.retailer_name) > 128:
+        raise ValueError("The retailer name must be between 2 and 128 characters long.")
 
     if self.program_type is None:
         raise ValueError("The program must have a program type.")
