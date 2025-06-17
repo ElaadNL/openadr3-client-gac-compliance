@@ -10,15 +10,13 @@ def _create_ven(ven_name: str) -> NewVen:
     Args:
         ven_name: The ven name of the ven.
     """
-    return NewVen(
-        id=None,
-        ven_name=ven_name
-    )
+    return NewVen(id=None, ven_name=ven_name)
 
 
 def test_ven_gac_compliant_valid() -> None:
     """Test that a ven with an eMI3 identifier as ven name is accepted."""
     _ = _create_ven("NL-ABC")
+
 
 def test_ven_gac_compliant_invalid_format() -> None:
     """Test that a ven with a ven name that does not follow the eMI3 identifier format is rejected."""
@@ -27,6 +25,7 @@ def test_ven_gac_compliant_invalid_format() -> None:
         match="The ven name must be formatted as an eMI3 identifier.",
     ):
         _ = _create_ven("ABCDEFG")
+
 
 def test_ven_gac_compliant_invalid_country_code() -> None:
     """Test that a ven with a ven name that does not have a valid ISO 3166-1 alpha-2 country code is rejected."""
