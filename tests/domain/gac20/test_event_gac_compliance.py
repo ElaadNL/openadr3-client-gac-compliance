@@ -35,7 +35,7 @@ def _default_valid_targets() -> Tuple[Target, ...]:
 
 def _create_event(
     intervals: Tuple[Interval[EventPayload], ...],
-    priority: int | None = 1,
+    priority: int | None = None,
     targets: Tuple[Target, ...] | None = _default_valid_targets(),
     payload_descriptor: Tuple[EventPayloadDescriptor, ...]
     | None = _default_valid_payload_descriptor(),
@@ -600,39 +600,14 @@ def test_invalid_unit_in_descriptor() -> None:
         )
 
 
-def test_priority_too_high() -> None:
-    """Test that a priority that is higher than the max priority in the GAC specification raises an error."""
+def test_priority_set() -> None:
+    """Test that a priority that is set raises an error for GAC 2.0 compliance."""
     with pytest.raises(
         ValidationError,
-        match="The priority must be greater than or equal to 0 and less than or equal to 999.",
+        match="The event must not have a priority set for GAC 2.0 compliance",
     ):
         _ = _create_event(
-            priority=1000,
-            interval_period=None,
-            intervals=(
-                Interval(
-                    id=0,
-                    interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-                        duration=timedelta(minutes=5),
-                    ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
-                ),
-            ),
-        )
-
-
-def test_priority_too_low() -> None:
-    """Test that a priority that is lower than the min priority in the GAC specification raises an error."""
-    with pytest.raises(
-        ValidationError, match="Input should be greater than or equal to 0"
-    ):
-        _ = _create_event(
-            priority=-1,
+            priority=1,
             interval_period=None,
             intervals=(
                 Interval(
@@ -652,26 +627,25 @@ def test_priority_too_low() -> None:
 
 
 def test_priority_not_set() -> None:
-    """Test that a priority that is not set raises an error."""
-    with pytest.raises(ValidationError, match="The event must have a priority set."):
-        _ = _create_event(
-            priority=None,
-            interval_period=None,
-            intervals=(
-                Interval(
-                    id=0,
-                    interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-                        duration=timedelta(minutes=5),
-                    ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
+    """Test that a priority that is not set is valid for GAC 2.0 compliance."""
+    _ = _create_event(
+        priority=None,
+        interval_period=None,
+        intervals=(
+            Interval(
+                id=0,
+                interval_period=IntervalPeriod(
+                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                    duration=timedelta(minutes=5),
+                ),
+                payloads=(
+                    EventPayload(
+                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
                     ),
                 ),
             ),
-        )
+        ),
+    )
 
 
 def test_non_increasing_interval_ids() -> None:
