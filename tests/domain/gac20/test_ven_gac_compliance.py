@@ -35,6 +35,7 @@ def test_ven_gac_compliant_invalid_country_code() -> None:
     ):
         _ = _create_ven("ZZ-123")
 
+
 def test_ven_multiple_errors_grouped() -> None:
     """Test that multiple errors are grouped together and returned as a single error."""
     with pytest.raises(
@@ -48,5 +49,11 @@ def test_ven_multiple_errors_grouped() -> None:
     assert len(grouped_errors) == 2
     assert grouped_errors[0].get("type") == "value_error"
     assert grouped_errors[1].get("type") == "value_error"
-    assert grouped_errors[0].get("msg") == "The ven name must be formatted as an eMI3 identifier."
-    assert grouped_errors[1].get("msg") == "The first two characters of the ven name must be a valid ISO 3166-1 alpha-2 country code."
+    assert (
+        grouped_errors[0].get("msg")
+        == "The ven name must be formatted as an eMI3 identifier."
+    )
+    assert (
+        grouped_errors[1].get("msg")
+        == "The first two characters of the ven name must be a valid ISO 3166-1 alpha-2 country code."
+    )

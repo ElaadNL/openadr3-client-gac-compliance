@@ -688,7 +688,7 @@ def test_non_increasing_interval_ids() -> None:
 def test_interval_payload_type_invalid() -> None:
     """Test that an invalid payload type in an interval payload raises an error."""
     with pytest.raises(
-        ValueError,
+        ValidationError,
         match="The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
     ):
         _ = _create_event(
