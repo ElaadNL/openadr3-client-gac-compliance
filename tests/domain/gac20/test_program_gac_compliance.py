@@ -89,3 +89,28 @@ def test_binding_events_false() -> None:
         ValidationError, match="The program must have bindingEvents set to True."
     ):
         _ = _create_program(binding_events=False)
+
+
+def test_program_multiple_errors_grouped() -> None:
+    """Test that multiple errors are grouped together and returned as a single error."""
+    with pytest.raises(
+        ValidationError,
+        match="2 validation errors for NewProgram",
+    ) as exc_info:
+        _ = _create_program(
+            program_type="DSO_CPO_INTERFACE-invalid", binding_events=False
+        )
+
+    grouped_errors = exc_info.value.errors()
+
+    assert len(grouped_errors) == 2
+    assert grouped_errors[0].get("type") == "value_error"
+    assert grouped_errors[1].get("type") == "value_error"
+    assert (
+        grouped_errors[0].get("msg")
+        == "The program type must follow the format DSO_CPO_INTERFACE-x.x.x."
+    )
+    assert (
+        grouped_errors[1].get("msg")
+        == "The program must have bindingEvents set to True."
+    )

@@ -768,3 +768,40 @@ def test_event_interval_multiple_payloads() -> None:
                 ),
             ),
         )
+
+
+def test_event_multiple_errors_grouped() -> None:
+    """Test that multiple errors are grouped together and returned as a single error."""
+    with pytest.raises(
+        ValidationError,
+        match="2 validation errors for NewEvent",
+    ) as exc_info:
+        _ = _create_event(
+            targets=(),
+            interval_period=None,
+            intervals=(
+                Interval(
+                    id=0,
+                    interval_period=IntervalPeriod(
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        duration=timedelta(minutes=5),
+                    ),
+                    payloads=(
+                        EventPayload(
+                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+    grouped_errors = exc_info.value.errors()
+
+    assert len(grouped_errors) == 2
+    assert grouped_errors[0].get("type") == "value_error"
+    assert grouped_errors[1].get("type") == "value_error"
+    assert (
+        grouped_errors[0].get("msg")
+        == "The event must contain a POWER_SERVICE_LOCATIONS target."
+    )
+    assert grouped_errors[1].get("msg") == "The event must contain a VEN_NAME target."
