@@ -13,12 +13,16 @@ as the program object does not contain the events, these are stored seperately i
 
 from itertools import pairwise
 import re
+from typing import Tuple
 from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
 from openadr3_client.models.event.event import Event
 from openadr3_client.models.event.event_payload import EventPayloadType
 
+from pydantic import ValidationError
+from pydantic_core import InitErrorDetails, PydanticCustomError
 
-def _continuous_or_seperated(self: Event) -> Event:
+
+def _continuous_or_seperated(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
     """Enforces that events either have consistent interval definitions compliant with GAC.
 
     the Grid aware charging (GAC) specification allows for two types of (mutually exclusive)
@@ -35,6 +39,8 @@ def _continuous_or_seperated(self: Event) -> Event:
     and the top-level intervalPeriod of the event must be None. This seperated approach is used when events have differing
     durations.
     """
+    validation_errors: list[InitErrorDetails] = []
+
     intervals = self.intervals or ()
 
     if self.interval_period is None:
@@ -42,8 +48,16 @@ def _continuous_or_seperated(self: Event) -> Event:
         # Ensure that all intervals have the interval_period defined, to comply with the GAC specification.
         undefined_intervals_period = [i for i in intervals if i.interval_period is None]
         if undefined_intervals_period:
-            raise ValueError(
-                "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'."
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",
+                    ),
+                    loc=("intervals",),
+                    input=self.intervals,
+                    ctx={},
+                )
             )
     else:
         # interval period set at top level of the event.
@@ -52,14 +66,22 @@ def _continuous_or_seperated(self: Event) -> Event:
             i for i in intervals if i.interval_period is not None
         ]
         if duplicate_interval_period:
-            raise ValueError(
-                "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'."
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",
+                    ),
+                    loc=("intervals",),
+                    input=self.intervals,
+                    ctx={},
+                )
             )
 
-    return self
+    return self, validation_errors
 
 
-def _targets_compliant(self: Event) -> Event:
+def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
     """Enforces that the targets of the event are compliant with GAC.
 
     GAC enforces the following constraints for targets:
@@ -69,6 +91,7 @@ def _targets_compliant(self: Event) -> Event:
     - The event must contain a VEN_NAME target.
     - The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).
     """
+    validation_errors: list[InitErrorDetails] = []
     targets = self.targets or ()
 
     power_service_locations = [
@@ -77,42 +100,124 @@ def _targets_compliant(self: Event) -> Event:
     ven_names = [t for t in targets if t.type == "VEN_NAME"]
 
     if not power_service_locations:
-        raise ValueError("The event must contain a POWER_SERVICE_LOCATIONS target.")
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must contain a POWER_SERVICE_LOCATIONS target.",
+                ),
+                loc=("targets",),
+                input=self.targets,
+                ctx={},
+            )
+        )
 
     if not ven_names:
-        raise ValueError("The event must contain a VEN_NAME target.")
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must contain a VEN_NAME target.",
+                ),
+                loc=("targets",),
+                input=self.targets,
+                ctx={},
+            )
+        )
 
     if len(power_service_locations) > 1:
-        raise ValueError(
-            "The event must contain exactly one POWER_SERVICE_LOCATIONS target."
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must contain exactly one POWER_SERVICE_LOCATIONS target.",
+                ),
+                loc=("targets",),
+                input=self.targets,
+                ctx={},
+            )
         )
 
     if len(ven_names) > 1:
-        raise ValueError("The event must contain only one VEN_NAME target.")
-
-    power_service_location = power_service_locations[0]
-    ven_name = ven_names[0]
-
-    if len(power_service_location.values) == 0:
-        raise ValueError("The POWER_SERVICE_LOCATIONS target value cannot be empty.")
-
-    if not all(re.fullmatch(r"\d{18}", v) for v in power_service_location.values):
-        raise ValueError(
-            "The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values."
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must contain only one VEN_NAME target.",
+                ),
+                loc=("targets",),
+                input=self.targets,
+                ctx={},
+            )
         )
 
-    if len(ven_name.values) == 0:
-        raise ValueError("The VEN_NAME target value cannot be empty.")
+    if (
+        power_service_locations
+        and ven_names
+        and len(power_service_locations) == 1
+        and len(ven_names) == 1
+    ):
+        power_service_location = power_service_locations[0]
+        ven_name = ven_names[0]
 
-    if not all(1 <= len(v) <= 128 for v in ven_name.values):
-        raise ValueError(
-            "The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters)."
-        )
+        if len(power_service_location.values) == 0:
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The POWER_SERVICE_LOCATIONS target value cannot be empty.",
+                    ),
+                    loc=("targets",),
+                    input=self.targets,
+                    ctx={},
+                )
+            )
 
-    return self
+        if not all(re.fullmatch(r"\d{18}", v) for v in power_service_location.values):
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.",
+                    ),
+                    loc=("targets",),
+                    input=self.targets,
+                    ctx={},
+                )
+            )
+
+        if len(ven_name.values) == 0:
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The VEN_NAME target value cannot be empty.",
+                    ),
+                    loc=("targets",),
+                    input=self.targets,
+                    ctx={},
+                )
+            )
+
+        if not all(1 <= len(v) <= 128 for v in ven_name.values):
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).",
+                    ),
+                    loc=("targets",),
+                    input=self.targets,
+                    ctx={},
+                )
+            )
+
+    return self, validation_errors
 
 
-def _payload_descriptor_gac_compliant(self: Event) -> Event:
+def _payload_descriptor_gac_compliant(
+    self: Event,
+) -> Tuple[Event, list[InitErrorDetails]]:
     """Enforces that the payload descriptor is GAC compliant.
 
     GAC enforces the following constraints for payload descriptors:
@@ -121,28 +226,67 @@ def _payload_descriptor_gac_compliant(self: Event) -> Event:
     - The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'
     - The payload descriptor must have a units of 'KW' (case sensitive).
     """
+    validation_errors: list[InitErrorDetails] = []
+
     if self.payload_descriptor is None:
-        raise ValueError("The event must have a payload descriptor.")
-
-    if len(self.payload_descriptor) != 1:
-        raise ValueError("The event must have exactly one payload descriptor.")
-
-    payload_descriptor = self.payload_descriptor[0]
-
-    if payload_descriptor.payload_type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
-        raise ValueError(
-            "The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'."
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must have a payload descriptor.",
+                ),
+                loc=("payload_descriptor",),
+                input=self.payload_descriptor,
+                ctx={},
+            )
         )
 
-    if payload_descriptor.units != "KW":
-        raise ValueError(
-            "The payload descriptor must have a units of 'KW' (case sensitive)."
-        )
+    if self.payload_descriptor is not None:
+        if len(self.payload_descriptor) != 1:
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The event must have exactly one payload descriptor.",
+                    ),
+                    loc=("payload_descriptor",),
+                    input=self.payload_descriptor,
+                    ctx={},
+                )
+            )
 
-    return self
+        payload_descriptor = self.payload_descriptor[0]
+
+        if payload_descriptor.payload_type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
+                    ),
+                    loc=("payload_descriptor",),
+                    input=self.payload_descriptor,
+                    ctx={},
+                )
+            )
+
+        if payload_descriptor.units != "KW":
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The payload descriptor must have a units of 'KW' (case sensitive).",
+                    ),
+                    loc=("payload_descriptor",),
+                    input=self.payload_descriptor,
+                    ctx={},
+                )
+            )
+
+    return self, validation_errors
 
 
-def _event_interval_gac_compliant(self: Event) -> Event:
+def _event_interval_gac_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
     """Enforces that the event interval is GAC compliant.
 
     GAC enforces the following constraints for event intervals:
@@ -151,29 +295,77 @@ def _event_interval_gac_compliant(self: Event) -> Event:
     - The event interval must have exactly one payload.
     - The payload of the event interval must have a type of 'IMPORT_CAPACITY_LIMIT'
     """
+    validation_errors: list[InitErrorDetails] = []
+
     if not self.intervals:
-        raise ValueError("The event must have at least one interval.")
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must have at least one interval.",
+                ),
+                loc=("intervals",),
+                input=self.intervals,
+                ctx={},
+            )
+        )
 
     if not all(curr.id > prev.id for prev, curr in pairwise(self.intervals)):
-        raise ValueError(
-            "The event interval must have an id value that is strictly increasing."
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event interval must have an id value that is strictly increasing.",
+                ),
+                loc=("intervals",),
+                input=self.intervals,
+                ctx={},
+            )
         )
 
     for interval in self.intervals:
         if interval.payloads is None:
-            raise ValueError("The event interval must have a payload.")
-
-        if len(interval.payloads) != 1:
-            raise ValueError("The event interval must have exactly one payload.")
-
-        payload = interval.payloads[0]
-
-        if payload.type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
-            raise ValueError(
-                "The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'."
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The event interval must have a payload.",
+                    ),
+                    loc=("intervals",),
+                    input=self.intervals,
+                    ctx={},
+                )
             )
 
-    return self
+        if len(interval.payloads) != 1:
+            validation_errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        "value_error",
+                        "The event interval must have exactly one payload.",
+                    ),
+                    loc=("intervals",),
+                    input=self.intervals,
+                    ctx={},
+                )
+            )
+        else:
+            payload = interval.payloads[0]
+
+            if payload.type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
+                validation_errors.append(
+                    InitErrorDetails(
+                        type=PydanticCustomError(
+                            "value_error",
+                            "The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
+                        ),
+                        loc=("intervals",),
+                        input=self.intervals,
+                        ctx={},
+                    )
+                )
+
+    return self, validation_errors
 
 
 @ValidatorRegistry.register(Event, ValidatorModel())
@@ -185,16 +377,40 @@ def event_gac_compliant(self: Event) -> Event:
     - The event must not have a priority set.
     - The event must have either a continuous or seperated interval definition.
     """
+    validation_errors: list[InitErrorDetails] = []
+
     if self.priority is not None:
-        raise ValueError(
-            "The event must not have a priority set for GAC 2.0 compliance"
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The event must not have a priority set for GAC 2.0 compliance",
+                ),
+                loc=("priority",),
+                input=self.priority,
+                ctx={},
+            )
         )
 
-    interval_periods_validated = _continuous_or_seperated(self)
-    targets_validated = _targets_compliant(interval_periods_validated)
-    payload_descriptor_validated = _payload_descriptor_gac_compliant(targets_validated)
-    event_interval_validated = _event_interval_gac_compliant(
+    interval_periods_validated, errors = _continuous_or_seperated(self)
+    validation_errors.extend(errors)
+
+    targets_validated, errors = _targets_compliant(interval_periods_validated)
+    validation_errors.extend(errors)
+
+    payload_descriptor_validated, errors = _payload_descriptor_gac_compliant(
+        targets_validated
+    )
+    validation_errors.extend(errors)
+
+    event_interval_validated, errors = _event_interval_gac_compliant(
         payload_descriptor_validated
     )
+    validation_errors.extend(errors)
+
+    if validation_errors:
+        raise ValidationError.from_exception_data(
+            title=self.__class__.__name__, line_errors=validation_errors
+        )
 
     return event_interval_validated

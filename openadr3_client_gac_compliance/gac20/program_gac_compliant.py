@@ -5,6 +5,9 @@ from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorMo
 
 import re
 
+from pydantic import ValidationError
+from pydantic_core import InitErrorDetails, PydanticCustomError
+
 
 @ValidatorRegistry.register(Program, ValidatorModel())
 def program_gac_compliant(self: Program) -> Program:
@@ -18,22 +21,81 @@ def program_gac_compliant(self: Program) -> Program:
     - The program MUST have bindingEvents set to True.
     are allowed there.
     """
+    validation_errors: list[InitErrorDetails] = []
+
     program_type_regex = r"^DSO_CPO_INTERFACE-(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 
     if self.retailer_name is None:
-        raise ValueError("The program must have a retailer name.")
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The program must have a retailer name.",
+                ),
+                loc=("retailer_name",),
+                input=self.retailer_name,
+                ctx={},
+            )
+        )
 
-    if len(self.retailer_name) < 2 or len(self.retailer_name) > 128:
-        raise ValueError("The retailer name must be between 2 and 128 characters long.")
+    if self.retailer_name is not None and (
+        len(self.retailer_name) < 2 or len(self.retailer_name) > 128
+    ):
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The retailer name must be between 2 and 128 characters long.",
+                ),
+                loc=("retailer_name",),
+                input=self.retailer_name,
+                ctx={},
+            )
+        )
 
     if self.program_type is None:
-        raise ValueError("The program must have a program type.")
-    if not re.fullmatch(program_type_regex, self.program_type):
-        raise ValueError(
-            "The program type must follow the format DSO_CPO_INTERFACE-x.x.x."
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The program must have a program type.",
+                ),
+                loc=("program_type",),
+                input=self.program_type,
+                ctx={},
+            )
+        )
+    if self.program_type is not None and not re.fullmatch(
+        program_type_regex, self.program_type
+    ):
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The program type must follow the format DSO_CPO_INTERFACE-x.x.x.",
+                ),
+                loc=("program_type",),
+                input=self.program_type,
+                ctx={},
+            )
         )
 
     if self.binding_events is False:
-        raise ValueError("The program must have bindingEvents set to True.")
+        validation_errors.append(
+            InitErrorDetails(
+                type=PydanticCustomError(
+                    "value_error",
+                    "The program must have bindingEvents set to True.",
+                ),
+                loc=("binding_events",),
+                input=self.binding_events,
+                ctx={},
+            )
+        )
+
+    if validation_errors:
+        raise ValidationError.from_exception_data(
+            title=self.__class__.__name__, line_errors=validation_errors
+        )
 
     return self
