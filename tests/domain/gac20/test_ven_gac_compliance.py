@@ -10,7 +10,7 @@ def _create_ven(ven_name: str) -> NewVen:
     Args:
         ven_name: The ven name of the ven.
     """
-    return NewVen(id=None, ven_name=ven_name)
+    return NewVen(ven_name=ven_name)
 
 
 def test_ven_gac_compliant_valid() -> None:
