@@ -5,6 +5,7 @@ from typing import Tuple
 
 from pydantic import ValidationError
 
+from openadr3_client.models.common.unit import Unit
 from openadr3_client.models.common.interval_period import IntervalPeriod
 from openadr3_client.models.event.event import NewEvent
 from openadr3_client.models.event.event_payload import (
@@ -20,7 +21,7 @@ def _default_valid_payload_descriptor() -> Tuple[EventPayloadDescriptor, ...]:
     """Helper function to create a default payload descriptor that is GAC compliant."""
     return (
         EventPayloadDescriptor(
-            payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units="KW"
+            payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
         ),
     )
 
@@ -517,10 +518,10 @@ def test_multiple_payload_descriptors() -> None:
         _ = _create_event(
             payload_descriptor=(
                 EventPayloadDescriptor(
-                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units="KW"
+                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
                 ),
                 EventPayloadDescriptor(
-                    payload_type=EventPayloadType.SIMPLE, units="test"
+                    payload_type=EventPayloadType.SIMPLE, units=Unit.KW
                 ),
             ),
             interval_period=None,
@@ -550,7 +551,7 @@ def test_invalid_payload_type_in_descriptor() -> None:
         _ = _create_event(
             payload_descriptor=(
                 EventPayloadDescriptor(
-                    payload_type=EventPayloadType.SIMPLE, units="KW"
+                    payload_type=EventPayloadType.SIMPLE, units=Unit.KW
                 ),
             ),
             interval_period=None,
@@ -579,7 +580,7 @@ def test_invalid_unit_in_descriptor() -> None:
         _ = _create_event(
             payload_descriptor=(
                 EventPayloadDescriptor(
-                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units="kw"
+                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
                 ),
             ),
             interval_period=None,

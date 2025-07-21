@@ -17,7 +17,6 @@ def _create_program(
         binding_events: Whether the program has binding events.
     """
     return NewProgram(
-        id=None,
         program_name="test-program",
         retailer_name=retailer_name,
         program_type=program_type,
