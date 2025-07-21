@@ -52,7 +52,6 @@ def _create_event(
         intervals: The intervals of the event.
     """
     return NewEvent(
-        id=None,
         programID="test-program",
         event_name="test-event",
         priority=priority,
@@ -580,7 +579,7 @@ def test_invalid_unit_in_descriptor() -> None:
         _ = _create_event(
             payload_descriptor=(
                 EventPayloadDescriptor(
-                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
+                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KVA
                 ),
             ),
             interval_period=None,
