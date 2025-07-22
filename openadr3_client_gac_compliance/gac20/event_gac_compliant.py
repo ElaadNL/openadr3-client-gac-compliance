@@ -86,17 +86,15 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
 
     GAC enforces the following constraints for targets:
 
-    - The event must contain a POWER_SERVICE_LOCATIONS target.
-    - The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.
+    - The event must contain a POWER_SERVICE_LOCATION target.
+    - The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.
     - The event must contain a VEN_NAME target.
     - The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).
     """
     validation_errors: list[InitErrorDetails] = []
     targets = self.targets or ()
 
-    power_service_locations = [
-        t for t in targets if t.type == "POWER_SERVICE_LOCATIONS"
-    ]
+    power_service_locations = [t for t in targets if t.type == "POWER_SERVICE_LOCATION"]
     ven_names = [t for t in targets if t.type == "VEN_NAME"]
 
     if not power_service_locations:
@@ -104,7 +102,7 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
             InitErrorDetails(
                 type=PydanticCustomError(
                     "value_error",
-                    "The event must contain a POWER_SERVICE_LOCATIONS target.",
+                    "The event must contain a POWER_SERVICE_LOCATION target.",
                 ),
                 loc=("targets",),
                 input=self.targets,
@@ -130,7 +128,7 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
             InitErrorDetails(
                 type=PydanticCustomError(
                     "value_error",
-                    "The event must contain exactly one POWER_SERVICE_LOCATIONS target.",
+                    "The event must contain exactly one POWER_SERVICE_LOCATION target.",
                 ),
                 loc=("targets",),
                 input=self.targets,
@@ -165,7 +163,7 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The POWER_SERVICE_LOCATIONS target value cannot be empty.",
+                        "The POWER_SERVICE_LOCATION target value cannot be empty.",
                     ),
                     loc=("targets",),
                     input=self.targets,
@@ -173,12 +171,14 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
                 )
             )
 
-        if not all(re.fullmatch(r"\d{18}", v) for v in power_service_location.values):
+        if not all(
+            re.fullmatch(r"^EAN\d{15}$", v) for v in power_service_location.values
+        ):
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.",
+                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
                     ),
                     loc=("targets",),
                     input=self.targets,

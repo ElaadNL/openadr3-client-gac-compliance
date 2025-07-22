@@ -29,7 +29,7 @@ def _default_valid_payload_descriptor() -> Tuple[EventPayloadDescriptor, ...]:
 def _default_valid_targets() -> Tuple[Target, ...]:
     """Helper function to create a default target that is GAC compliant."""
     return (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("123456789012345678",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
 
@@ -186,7 +186,7 @@ def test_targets_compliant_valid() -> None:
     """Test that targets which are GAC compliant are accepted.
 
     GAC required targets are:
-    - POWER_SERVICE_LOCATIONS
+    - POWER_SERVICE_LOCATION
     - VEN_NAME
 
     Additional targets are allowed, but these two must be present.
@@ -217,12 +217,12 @@ def test_targets_compliant_valid() -> None:
 
 
 def test_missing_power_service_locations() -> None:
-    """Test that missing POWER_SERVICE_LOCATIONS target raises an error."""
+    """Test that missing POWER_SERVICE_LOCATION target raises an error."""
     ven_name_target_only = (Target(type="VEN_NAME", values=("test-ven",)),)
 
     with pytest.raises(
         ValidationError,
-        match="The event must contain a POWER_SERVICE_LOCATIONS target.",
+        match="The event must contain a POWER_SERVICE_LOCATION target.",
     ):
         _ = _create_event(
             targets=ven_name_target_only,
@@ -247,7 +247,7 @@ def test_missing_power_service_locations() -> None:
 def test_missing_ven_name() -> None:
     """Test that missing VEN_NAME target raises an error."""
     power_service_locations_target_only = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("123456789012345678",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
     )
 
     with pytest.raises(
@@ -274,15 +274,15 @@ def test_missing_ven_name() -> None:
 
 
 def test_multiple_power_service_location_targets() -> None:
-    """Test that multiple POWER_SERVICE_LOCATIONS targets raises an error."""
+    """Test that multiple POWER_SERVICE_LOCATION targets raises an error."""
     gac_required_targets = _default_valid_targets()
     additional_target = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("test-target",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("test-target",)),
     )
 
     with pytest.raises(
         ValidationError,
-        match="The event must contain exactly one POWER_SERVICE_LOCATIONS target.",
+        match="The event must contain exactly one POWER_SERVICE_LOCATION target.",
     ):
         _ = _create_event(
             targets=gac_required_targets + additional_target,
@@ -335,13 +335,13 @@ def test_multiple_ven_name_targets() -> None:
 def test_power_service_locations_target_value_empty() -> None:
     """Test that power_service_locations target with an empty value raises an error."""
     targets: Tuple[Target, ...] = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=()),
+        Target(type="POWER_SERVICE_LOCATION", values=()),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
 
     with pytest.raises(
         ValidationError,
-        match="The POWER_SERVICE_LOCATIONS target value cannot be empty.",
+        match="The POWER_SERVICE_LOCATION target value cannot be empty.",
     ):
         _ = _create_event(
             targets=targets,
@@ -366,13 +366,13 @@ def test_power_service_locations_target_value_empty() -> None:
 def test_power_service_locations_invalid_value_format() -> None:
     """Test that power_service_locations target without an EAN18 value raises an error."""
     targets = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("invalid-value",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("invalid-value",)),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
 
     with pytest.raises(
         ValueError,
-        match="The POWER_SERVICE_LOCATIONS target value must be a list of 'EAN18' values.",
+        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
     ):
         _ = _create_event(
             targets=targets,
@@ -397,7 +397,7 @@ def test_power_service_locations_invalid_value_format() -> None:
 def test_ven_name_target_value_empty() -> None:
     """Test that VEN_NAME target with an empty value raises an error."""
     targets: Tuple[Target, ...] = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("123456789012345678",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
         Target(type="VEN_NAME", values=()),
     )
 
@@ -427,7 +427,7 @@ def test_ven_name_target_value_empty() -> None:
 def test_ven_name_target_too_long() -> None:
     """Test that VEN_NAME target with a value longer than 128 characters raises an error."""
     targets = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("123456789012345678",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
         Target(type="VEN_NAME", values=("a" * 129,)),
     )
 
@@ -458,7 +458,7 @@ def test_ven_name_target_too_long() -> None:
 def test_ven_name_target_too_short() -> None:
     """Test that VEN_NAME target with a value shorter than 1 character raises an error."""
     targets = (
-        Target(type="POWER_SERVICE_LOCATIONS", values=("123456789012345678",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
         Target(type="VEN_NAME", values=("",)),
     )
 
@@ -802,6 +802,6 @@ def test_event_multiple_errors_grouped() -> None:
     assert grouped_errors[1].get("type") == "value_error"
     assert (
         grouped_errors[0].get("msg")
-        == "The event must contain a POWER_SERVICE_LOCATIONS target."
+        == "The event must contain a POWER_SERVICE_LOCATION target."
     )
     assert grouped_errors[1].get("msg") == "The event must contain a VEN_NAME target."
