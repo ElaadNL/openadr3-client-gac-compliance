@@ -228,34 +228,34 @@ def _payload_descriptor_gac_compliant(
     """
     validation_errors: list[InitErrorDetails] = []
 
-    if self.payload_descriptor is None:
+    if self.payload_descriptors is None:
         validation_errors.append(
             InitErrorDetails(
                 type=PydanticCustomError(
                     "value_error",
                     "The event must have a payload descriptor.",
                 ),
-                loc=("payload_descriptor",),
-                input=self.payload_descriptor,
+                loc=("payload_descriptors",),
+                input=self.payload_descriptors,
                 ctx={},
             )
         )
 
-    if self.payload_descriptor is not None:
-        if len(self.payload_descriptor) != 1:
+    if self.payload_descriptors is not None:
+        if len(self.payload_descriptors) != 1:
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
                         "The event must have exactly one payload descriptor.",
                     ),
-                    loc=("payload_descriptor",),
-                    input=self.payload_descriptor,
+                    loc=("payload_descriptors",),
+                    input=self.payload_descriptors,
                     ctx={},
                 )
             )
 
-        payload_descriptor = self.payload_descriptor[0]
+        payload_descriptor = self.payload_descriptors[0]
 
         if payload_descriptor.payload_type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
             validation_errors.append(
@@ -264,8 +264,8 @@ def _payload_descriptor_gac_compliant(
                         "value_error",
                         "The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
                     ),
-                    loc=("payload_descriptor",),
-                    input=self.payload_descriptor,
+                    loc=("payload_descriptors",),
+                    input=self.payload_descriptors,
                     ctx={},
                 )
             )
@@ -277,8 +277,8 @@ def _payload_descriptor_gac_compliant(
                         "value_error",
                         "The payload descriptor must have a units of 'KW' (case sensitive).",
                     ),
-                    loc=("payload_descriptor",),
-                    input=self.payload_descriptor,
+                    loc=("payload_descriptors",),
+                    input=self.payload_descriptors,
                     ctx={},
                 )
             )
