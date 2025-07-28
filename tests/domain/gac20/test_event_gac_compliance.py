@@ -56,7 +56,7 @@ def _create_event(
         event_name="test-event",
         priority=priority,
         targets=targets,
-        payload_descriptor=payload_descriptor,
+        payload_descriptors=payload_descriptor,
         interval_period=interval_period,
         intervals=intervals,
     )
