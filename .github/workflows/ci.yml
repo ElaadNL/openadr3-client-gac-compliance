@@ -27,7 +27,7 @@ jobs:
       - name: Run formatter
         run: |
           mkdir format-logs
-          poetry run ruff format --diff > format-logs/ruff-lint.log
+          poetry run task format-ci > format-logs/ruff-lint.log
       - name: Upload formatter logs
         if: failure()
         uses: actions/upload-artifact@v4
@@ -37,7 +37,7 @@ jobs:
       - name: Run linter
         run: |
           mkdir linter-logs
-          poetry run ruff check --no-cache . > linter-logs/ruff-lint.log
+          poetry run task check-ci > linter-logs/ruff-lint.log
       - name: Upload linter logs
         if: failure()
         uses: actions/upload-artifact@v4
@@ -45,7 +45,16 @@ jobs:
           name: linter-log
           path: linter-logs
       - name: Run type checker
-        run: poetry run mypy .
+        run: |
+          mkdir mypy-logs
+          poetry run task mypy > mypy-logs/mypy-log.log
+      - name: Upload mypy logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mypy-log
+          path: mypy-logs
+
   tests:
     runs-on: ubuntu-latest
     steps:

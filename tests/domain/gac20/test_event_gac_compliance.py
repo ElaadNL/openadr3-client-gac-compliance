@@ -1,32 +1,25 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 import pytest
-
-from typing import Tuple
-
-from pydantic import ValidationError
-
-from openadr3_client.models.common.unit import Unit
+from openadr3_client.models.common.interval import Interval
 from openadr3_client.models.common.interval_period import IntervalPeriod
+from openadr3_client.models.common.target import Target
+from openadr3_client.models.common.unit import Unit
 from openadr3_client.models.event.event import NewEvent
 from openadr3_client.models.event.event_payload import (
     EventPayload,
-    EventPayloadType,
     EventPayloadDescriptor,
+    EventPayloadType,
 )
-from openadr3_client.models.common.target import Target
-from openadr3_client.models.common.interval import Interval
+from pydantic import ValidationError
 
 
-def _default_valid_payload_descriptor() -> Tuple[EventPayloadDescriptor, ...]:
+def _default_valid_payload_descriptor() -> tuple[EventPayloadDescriptor, ...]:
     """Helper function to create a default payload descriptor that is GAC compliant."""
-    return (
-        EventPayloadDescriptor(
-            payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
-        ),
-    )
+    return (EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW),)
 
 
-def _default_valid_targets() -> Tuple[Target, ...]:
+def _default_valid_targets() -> tuple[Target, ...]:
     """Helper function to create a default target that is GAC compliant."""
     return (
         Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
@@ -35,14 +28,14 @@ def _default_valid_targets() -> Tuple[Target, ...]:
 
 
 def _create_event(
-    intervals: Tuple[Interval[EventPayload], ...],
+    intervals: tuple[Interval[EventPayload], ...],
     priority: int | None = None,
-    targets: Tuple[Target, ...] | None = _default_valid_targets(),
-    payload_descriptor: Tuple[EventPayloadDescriptor, ...]
-    | None = _default_valid_payload_descriptor(),
+    targets: tuple[Target, ...] | None = _default_valid_targets(),
+    payload_descriptor: tuple[EventPayloadDescriptor, ...] | None = _default_valid_payload_descriptor(),
     interval_period: IntervalPeriod | None = None,
 ) -> NewEvent:
-    """Helper function to create a event with the specified values.
+    """
+    Helper function to create a event with the specified values.
 
     Args:
         priority: The priority of the event.
@@ -50,47 +43,41 @@ def _create_event(
         payload_descriptor: The payload descriptor of the event.
         interval_period: The interval period of the event.
         intervals: The intervals of the event.
+
     """
     return NewEvent(
         programID="test-program",
         event_name="test-event",
         priority=priority,
         targets=targets,
-        payload_descriptors=payload_descriptor,
+        payload_descriptor=payload_descriptor,
         interval_period=interval_period,
         intervals=intervals,
     )
 
 
 def test_continuous_interval_definition_valid() -> None:
-    """Test that a continuous interval definition is valid.
+    """
+    Test that a continuous interval definition is valid.
 
     A Continious interval definition is when the interval_period is set on the event and implicitly
     applied to all intervals. Intervals cannot have their own interval_period set.
     """
     event = _create_event(
         interval_period=IntervalPeriod(
-            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
             duration=timedelta(minutes=5),
         ),
         intervals=(
             Interval(
                 id=0,
                 interval_period=None,
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
             ),
             Interval(
                 id=1,
                 interval_period=None,
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),),
             ),
         ),
     )
@@ -101,7 +88,8 @@ def test_continuous_interval_definition_valid() -> None:
 
 
 def test_seperated_interval_definition_valid() -> None:
-    """Test that a seperated interval definition is valid.
+    """
+    Test that a seperated interval definition is valid.
 
     A seperated interval definition is when the interval_period is not set on the event and
     must be explicitly set on all intervals.
@@ -112,26 +100,18 @@ def test_seperated_interval_definition_valid() -> None:
             Interval(
                 id=0,
                 interval_period=IntervalPeriod(
-                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                     duration=timedelta(minutes=5),
                 ),
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
             ),
             Interval(
                 id=1,
                 interval_period=IntervalPeriod(
-                    start=datetime(2023, 1, 1, 0, 5, 0, tzinfo=timezone.utc),
+                    start=datetime(2023, 1, 1, 0, 5, 0, tzinfo=UTC),
                     duration=timedelta(minutes=5),
                 ),
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),),
             ),
         ),
     )
@@ -142,48 +122,42 @@ def test_seperated_interval_definition_valid() -> None:
 
 
 def test_combined_interval_definition_not_allowed() -> None:
-    """Test to verify that a combined interval definition is not allowed.
+    """
+    Test to verify that a combined interval definition is not allowed.
 
     A combined interval definition is when the interval_period is set on the event and
     explicitly set on one or more intervals.
     """
     with pytest.raises(
         ValidationError,
-        match="Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",
+        match="Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",  # noqa: E501
     ):
         _ = _create_event(
             interval_period=IntervalPeriod(
-                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                 duration=timedelta(minutes=5),
             ),
             intervals=(
                 Interval(
                     id=0,
                     interval_period=None,
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
                 Interval(
                     id=1,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),),
                 ),
             ),
         )
 
 
 def test_targets_compliant_valid() -> None:
-    """Test that targets which are GAC compliant are accepted.
+    """
+    Test that targets which are GAC compliant are accepted.
 
     GAC required targets are:
     - POWER_SERVICE_LOCATION
@@ -201,14 +175,10 @@ def test_targets_compliant_valid() -> None:
             Interval(
                 id=0,
                 interval_period=IntervalPeriod(
-                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                     duration=timedelta(minutes=5),
                 ),
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
             ),
         ),
     )
@@ -231,14 +201,10 @@ def test_missing_power_service_locations() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -246,13 +212,9 @@ def test_missing_power_service_locations() -> None:
 
 def test_missing_ven_name() -> None:
     """Test that missing VEN_NAME target raises an error."""
-    power_service_locations_target_only = (
-        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
-    )
+    power_service_locations_target_only = (Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),)
 
-    with pytest.raises(
-        ValidationError, match="The event must contain a VEN_NAME target."
-    ):
+    with pytest.raises(ValidationError, match="The event must contain a VEN_NAME target."):
         _ = _create_event(
             targets=power_service_locations_target_only,
             interval_period=None,
@@ -260,14 +222,10 @@ def test_missing_ven_name() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -276,9 +234,7 @@ def test_missing_ven_name() -> None:
 def test_multiple_power_service_location_targets() -> None:
     """Test that multiple POWER_SERVICE_LOCATION targets raises an error."""
     gac_required_targets = _default_valid_targets()
-    additional_target = (
-        Target(type="POWER_SERVICE_LOCATION", values=("test-target",)),
-    )
+    additional_target = (Target(type="POWER_SERVICE_LOCATION", values=("test-target",)),)
 
     with pytest.raises(
         ValidationError,
@@ -291,14 +247,10 @@ def test_multiple_power_service_location_targets() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -309,9 +261,7 @@ def test_multiple_ven_name_targets() -> None:
     gac_required_targets = _default_valid_targets()
     additional_target = (Target(type="VEN_NAME", values=("test-target",)),)
 
-    with pytest.raises(
-        ValidationError, match="The event must contain only one VEN_NAME target."
-    ):
+    with pytest.raises(ValidationError, match="The event must contain only one VEN_NAME target."):
         _ = _create_event(
             targets=gac_required_targets + additional_target,
             interval_period=None,
@@ -319,14 +269,10 @@ def test_multiple_ven_name_targets() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -334,7 +280,7 @@ def test_multiple_ven_name_targets() -> None:
 
 def test_power_service_locations_target_value_empty() -> None:
     """Test that power_service_locations target with an empty value raises an error."""
-    targets: Tuple[Target, ...] = (
+    targets: tuple[Target, ...] = (
         Target(type="POWER_SERVICE_LOCATION", values=()),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
@@ -350,14 +296,10 @@ def test_power_service_locations_target_value_empty() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -381,14 +323,10 @@ def test_power_service_locations_invalid_value_format() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -396,14 +334,12 @@ def test_power_service_locations_invalid_value_format() -> None:
 
 def test_ven_name_target_value_empty() -> None:
     """Test that VEN_NAME target with an empty value raises an error."""
-    targets: Tuple[Target, ...] = (
+    targets: tuple[Target, ...] = (
         Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
         Target(type="VEN_NAME", values=()),
     )
 
-    with pytest.raises(
-        ValidationError, match="The VEN_NAME target value cannot be empty."
-    ):
+    with pytest.raises(ValidationError, match="The VEN_NAME target value cannot be empty."):
         _ = _create_event(
             targets=targets,
             interval_period=None,
@@ -411,14 +347,10 @@ def test_ven_name_target_value_empty() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -442,14 +374,10 @@ def test_ven_name_target_too_long() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -473,14 +401,10 @@ def test_ven_name_target_too_short() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -496,14 +420,10 @@ def test_no_payload_descriptor() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -511,31 +431,21 @@ def test_no_payload_descriptor() -> None:
 
 def test_multiple_payload_descriptors() -> None:
     """Test that an event with multiple payload descriptors raises an error."""
-    with pytest.raises(
-        ValidationError, match="The event must have exactly one payload descriptor."
-    ):
+    with pytest.raises(ValidationError, match="The event must have exactly one payload descriptor."):
         _ = _create_event(
             payload_descriptor=(
-                EventPayloadDescriptor(
-                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW
-                ),
-                EventPayloadDescriptor(
-                    payload_type=EventPayloadType.SIMPLE, units=Unit.KW
-                ),
+                EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW),
+                EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),
             ),
             interval_period=None,
             intervals=(
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -548,24 +458,16 @@ def test_invalid_payload_type_in_descriptor() -> None:
         match="The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
     ):
         _ = _create_event(
-            payload_descriptor=(
-                EventPayloadDescriptor(
-                    payload_type=EventPayloadType.SIMPLE, units=Unit.KW
-                ),
-            ),
+            payload_descriptor=(EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),),
             interval_period=None,
             intervals=(
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -573,28 +475,20 @@ def test_invalid_payload_type_in_descriptor() -> None:
 
 def test_invalid_unit_in_descriptor() -> None:
     """Test that invalid unit in descriptor raises an error."""
-    with pytest.raises(
-        ValidationError, match="The payload descriptor must have a units of 'KW'"
-    ):
+    with pytest.raises(ValidationError, match="The payload descriptor must have a units of 'KW'"):
         _ = _create_event(
             payload_descriptor=(
-                EventPayloadDescriptor(
-                    payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KVA
-                ),
+                EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KVA),
             ),
             interval_period=None,
             intervals=(
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -613,14 +507,10 @@ def test_priority_set() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -635,14 +525,10 @@ def test_priority_not_set() -> None:
             Interval(
                 id=0,
                 interval_period=IntervalPeriod(
-                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                     duration=timedelta(minutes=5),
                 ),
-                payloads=(
-                    EventPayload(
-                        type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                    ),
-                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
             ),
         ),
     )
@@ -660,26 +546,18 @@ def test_non_increasing_interval_ids() -> None:
                 Interval(
                     id=1,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),),
                 ),
             ),
         )
@@ -697,12 +575,10 @@ def test_interval_payload_type_invalid() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(type=EventPayloadType.SIMPLE, values=(1.0,)),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.SIMPLE, values=(1.0,)),),
                 ),
             ),
         )
@@ -713,7 +589,7 @@ def test_event_no_intervals() -> None:
     with pytest.raises(ValueError, match="NewEvent must contain at least one interval"):
         _ = _create_event(
             interval_period=IntervalPeriod(
-                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                 duration=timedelta(minutes=5),
             ),
             intervals=(),
@@ -722,19 +598,17 @@ def test_event_no_intervals() -> None:
 
 def test_event_interval_no_payload() -> None:
     """Test that an event interval with no payload raises an error."""
-    with pytest.raises(
-        ValidationError, match="interval payload must contain at least one payload"
-    ):
+    with pytest.raises(ValidationError, match="interval payload must contain at least one payload"):
         _ = _create_event(
             interval_period=IntervalPeriod(
-                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                 duration=timedelta(minutes=5),
             ),
             intervals=(
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
                     payloads=(),
@@ -745,25 +619,19 @@ def test_event_interval_no_payload() -> None:
 
 def test_event_interval_multiple_payloads() -> None:
     """Test that an event interval with multiple payloads raises an error."""
-    with pytest.raises(
-        ValidationError, match="The event interval must have exactly one payload."
-    ):
+    with pytest.raises(ValidationError, match="The event interval must have exactly one payload."):
         _ = _create_event(
             interval_period=None,
             intervals=(
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
                     payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)
-                        ),
+                        EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),
+                        EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),
                     ),
                 ),
             ),
@@ -783,14 +651,10 @@ def test_event_multiple_errors_grouped() -> None:
                 Interval(
                     id=0,
                     interval_period=IntervalPeriod(
-                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
                         duration=timedelta(minutes=5),
                     ),
-                    payloads=(
-                        EventPayload(
-                            type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)
-                        ),
-                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
                 ),
             ),
         )
@@ -800,8 +664,5 @@ def test_event_multiple_errors_grouped() -> None:
     assert len(grouped_errors) == 2
     assert grouped_errors[0].get("type") == "value_error"
     assert grouped_errors[1].get("type") == "value_error"
-    assert (
-        grouped_errors[0].get("msg")
-        == "The event must contain a POWER_SERVICE_LOCATION target."
-    )
+    assert grouped_errors[0].get("msg") == "The event must contain a POWER_SERVICE_LOCATION target."
     assert grouped_errors[1].get("msg") == "The event must contain a VEN_NAME target."

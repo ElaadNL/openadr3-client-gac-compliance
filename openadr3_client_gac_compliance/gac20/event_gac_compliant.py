@@ -1,4 +1,5 @@
-"""Module which implements GAC compliance validators for the event OpenADR3 types.
+"""
+Module which implements GAC compliance validators for the event OpenADR3 types.
 
 This module validates all the object constraints and requirements on the OpenADR3 events resource
 as specified in the Grid aware charging (GAC) specification.
@@ -11,34 +12,35 @@ that a safe mode event is present in a program. And it cannot be validated on th
 as the program object does not contain the events, these are stored seperately in the VTN.
 """
 
-from itertools import pairwise
 import re
-from typing import Tuple
-from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
+from itertools import pairwise
+
 from openadr3_client.models.event.event import Event
 from openadr3_client.models.event.event_payload import EventPayloadType
-
+from openadr3_client.models.model import Model as ValidatorModel
+from openadr3_client.models.model import ValidatorRegistry
 from pydantic import ValidationError
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 
-def _continuous_or_seperated(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
-    """Enforces that events either have consistent interval definitions compliant with GAC.
+def _continuous_or_seperated(self: Event) -> tuple[Event, list[InitErrorDetails]]:
+    """
+    Enforces that events either have consistent interval definitions compliant with GAC.
 
     the Grid aware charging (GAC) specification allows for two types of (mutually exclusive)
     interval definitions:
 
     1. Continuous
-    2. Seperated
+    2. Separated
 
-    The continious implementation can be used when all intervals have the same duration.
+    The continuous implementation can be used when all intervals have the same duration.
     In this case, only the top-level intervalPeriod of the event can be used, and the intervalPeriods
     of the individual intervals must be None.
 
-    In the seperated intervalDefinition approach, the intervalPeriods must be set on each individual intervals,
-    and the top-level intervalPeriod of the event must be None. This seperated approach is used when events have differing
+    In the separated intervalDefinition approach, the intervalPeriods must be set on each individual intervals,
+    and the top-level intervalPeriod of the event must be None. This separated approach is used when events have differing
     durations.
-    """
+    """  # noqa: E501
     validation_errors: list[InitErrorDetails] = []
 
     intervals = self.intervals or ()
@@ -52,7 +54,7 @@ def _continuous_or_seperated(self: Event) -> Tuple[Event, list[InitErrorDetails]
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",
+                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",  # noqa: E501
                     ),
                     loc=("intervals",),
                     input=self.intervals,
@@ -62,15 +64,13 @@ def _continuous_or_seperated(self: Event) -> Tuple[Event, list[InitErrorDetails]
     else:
         # interval period set at top level of the event.
         # Ensure that all intervals do not have the interval_period defined, to comply with the GAC specification.
-        duplicate_interval_period = [
-            i for i in intervals if i.interval_period is not None
-        ]
+        duplicate_interval_period = [i for i in intervals if i.interval_period is not None]
         if duplicate_interval_period:
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",
+                        "Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",  # noqa: E501
                     ),
                     loc=("intervals",),
                     input=self.intervals,
@@ -81,8 +81,9 @@ def _continuous_or_seperated(self: Event) -> Tuple[Event, list[InitErrorDetails]
     return self, validation_errors
 
 
-def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
-    """Enforces that the targets of the event are compliant with GAC.
+def _targets_compliant(self: Event) -> tuple[Event, list[InitErrorDetails]]:
+    """
+    Enforces that the targets of the event are compliant with GAC.
 
     GAC enforces the following constraints for targets:
 
@@ -149,12 +150,7 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
             )
         )
 
-    if (
-        power_service_locations
-        and ven_names
-        and len(power_service_locations) == 1
-        and len(ven_names) == 1
-    ):
+    if power_service_locations and ven_names and len(power_service_locations) == 1 and len(ven_names) == 1:
         power_service_location = power_service_locations[0]
         ven_name = ven_names[0]
 
@@ -171,9 +167,7 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
                 )
             )
 
-        if not all(
-            re.fullmatch(r"^EAN\d{15}$", v) for v in power_service_location.values
-        ):
+        if not all(re.fullmatch(r"^EAN\d{15}$", v) for v in power_service_location.values):
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
@@ -199,12 +193,12 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
                 )
             )
 
-        if not all(1 <= len(v) <= 128 for v in ven_name.values):
+        if not all(1 <= len(v) <= 128 for v in ven_name.values):  # noqa: PLR2004
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).",
+                        "The VEN_NAME target value must be a list of 'ven object name' values (between 1 and 128 characters).",  # noqa: E501
                     ),
                     loc=("targets",),
                     input=self.targets,
@@ -217,8 +211,9 @@ def _targets_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
 
 def _payload_descriptor_gac_compliant(
     self: Event,
-) -> Tuple[Event, list[InitErrorDetails]]:
-    """Enforces that the payload descriptor is GAC compliant.
+) -> tuple[Event, list[InitErrorDetails]]:
+    """
+    Enforces that the payload descriptor is GAC compliant.
 
     GAC enforces the following constraints for payload descriptors:
 
@@ -228,34 +223,34 @@ def _payload_descriptor_gac_compliant(
     """
     validation_errors: list[InitErrorDetails] = []
 
-    if self.payload_descriptors is None:
+    if self.payload_descriptor is None:
         validation_errors.append(
             InitErrorDetails(
                 type=PydanticCustomError(
                     "value_error",
                     "The event must have a payload descriptor.",
                 ),
-                loc=("payload_descriptors",),
-                input=self.payload_descriptors,
+                loc=("payload_descriptor",),
+                input=self.payload_descriptor,
                 ctx={},
             )
         )
 
-    if self.payload_descriptors is not None:
-        if len(self.payload_descriptors) != 1:
+    if self.payload_descriptor is not None:
+        if len(self.payload_descriptor) != 1:
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
                         "The event must have exactly one payload descriptor.",
                     ),
-                    loc=("payload_descriptors",),
-                    input=self.payload_descriptors,
+                    loc=("payload_descriptor",),
+                    input=self.payload_descriptor,
                     ctx={},
                 )
             )
 
-        payload_descriptor = self.payload_descriptors[0]
+        payload_descriptor = self.payload_descriptor[0]
 
         if payload_descriptor.payload_type != EventPayloadType.IMPORT_CAPACITY_LIMIT:
             validation_errors.append(
@@ -265,7 +260,7 @@ def _payload_descriptor_gac_compliant(
                         "The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
                     ),
                     loc=("payload_descriptors",),
-                    input=self.payload_descriptors,
+                    input=self.payload_descriptor,
                     ctx={},
                 )
             )
@@ -278,7 +273,7 @@ def _payload_descriptor_gac_compliant(
                         "The payload descriptor must have a units of 'KW' (case sensitive).",
                     ),
                     loc=("payload_descriptors",),
-                    input=self.payload_descriptors,
+                    input=self.payload_descriptor,
                     ctx={},
                 )
             )
@@ -286,8 +281,9 @@ def _payload_descriptor_gac_compliant(
     return self, validation_errors
 
 
-def _event_interval_gac_compliant(self: Event) -> Tuple[Event, list[InitErrorDetails]]:
-    """Enforces that the event interval is GAC compliant.
+def _event_interval_gac_compliant(self: Event) -> tuple[Event, list[InitErrorDetails]]:
+    """
+    Enforces that the event interval is GAC compliant.
 
     GAC enforces the following constraints for event intervals:
 
@@ -370,7 +366,8 @@ def _event_interval_gac_compliant(self: Event) -> Tuple[Event, list[InitErrorDet
 
 @ValidatorRegistry.register(Event, ValidatorModel())
 def event_gac_compliant(self: Event) -> Event:
-    """Enforces that events are GAC compliant.
+    """
+    Enforces that events are GAC compliant.
 
     GAC enforces the following constraints for events:
 
@@ -398,19 +395,13 @@ def event_gac_compliant(self: Event) -> Event:
     targets_validated, errors = _targets_compliant(interval_periods_validated)
     validation_errors.extend(errors)
 
-    payload_descriptor_validated, errors = _payload_descriptor_gac_compliant(
-        targets_validated
-    )
+    payload_descriptor_validated, errors = _payload_descriptor_gac_compliant(targets_validated)
     validation_errors.extend(errors)
 
-    event_interval_validated, errors = _event_interval_gac_compliant(
-        payload_descriptor_validated
-    )
+    event_interval_validated, errors = _event_interval_gac_compliant(payload_descriptor_validated)
     validation_errors.extend(errors)
 
     if validation_errors:
-        raise ValidationError.from_exception_data(
-            title=self.__class__.__name__, line_errors=validation_errors
-        )
+        raise ValidationError.from_exception_data(title=self.__class__.__name__, line_errors=validation_errors)
 
     return event_interval_validated
