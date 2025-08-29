@@ -14,7 +14,7 @@ from openadr3_client.models.event.event_payload import (
 from pydantic import ValidationError
 
 
-def _default_valid_payload_descriptor() -> tuple[EventPayloadDescriptor, ...]:
+def _default_valid_payload_descriptors() -> tuple[EventPayloadDescriptor, ...]:
     """Helper function to create a default payload descriptor that is GAC compliant."""
     return (EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW),)
 
@@ -31,7 +31,7 @@ def _create_event(
     intervals: tuple[Interval[EventPayload], ...],
     priority: int | None = None,
     targets: tuple[Target, ...] | None = _default_valid_targets(),
-    payload_descriptor: tuple[EventPayloadDescriptor, ...] | None = _default_valid_payload_descriptor(),
+    payload_descriptors: tuple[EventPayloadDescriptor, ...] | None = _default_valid_payload_descriptors(),
     interval_period: IntervalPeriod | None = None,
 ) -> NewEvent:
     """
@@ -40,7 +40,7 @@ def _create_event(
     Args:
         priority: The priority of the event.
         targets: The targets of the event.
-        payload_descriptor: The payload descriptor of the event.
+        payload_descriptors: The payload descriptor of the event.
         interval_period: The interval period of the event.
         intervals: The intervals of the event.
 
@@ -50,7 +50,7 @@ def _create_event(
         event_name="test-event",
         priority=priority,
         targets=targets,
-        payload_descriptor=payload_descriptor,
+        payload_descriptors=payload_descriptors,
         interval_period=interval_period,
         intervals=intervals,
     )
@@ -410,11 +410,11 @@ def test_ven_name_target_too_short() -> None:
         )
 
 
-def test_no_payload_descriptor() -> None:
+def test_no_payload_descriptors() -> None:
     """Test that an event with no payload descriptor raises an error."""
     with pytest.raises(ValueError, match="The event must have a payload descriptor."):
         _ = _create_event(
-            payload_descriptor=None,
+            payload_descriptors=None,
             interval_period=None,
             intervals=(
                 Interval(
@@ -433,7 +433,7 @@ def test_multiple_payload_descriptors() -> None:
     """Test that an event with multiple payload descriptors raises an error."""
     with pytest.raises(ValidationError, match="The event must have exactly one payload descriptor."):
         _ = _create_event(
-            payload_descriptor=(
+            payload_descriptors=(
                 EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW),
                 EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),
             ),
@@ -451,14 +451,14 @@ def test_multiple_payload_descriptors() -> None:
         )
 
 
-def test_invalid_payload_type_in_descriptor() -> None:
+def test_invalid_payload_type_in_descriptors() -> None:
     """Test that invalid payload type in descriptor raises an error."""
     with pytest.raises(
         ValidationError,
         match="The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
     ):
         _ = _create_event(
-            payload_descriptor=(EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),),
+            payload_descriptors=(EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),),
             interval_period=None,
             intervals=(
                 Interval(
@@ -473,11 +473,11 @@ def test_invalid_payload_type_in_descriptor() -> None:
         )
 
 
-def test_invalid_unit_in_descriptor() -> None:
+def test_invalid_unit_in_descriptors() -> None:
     """Test that invalid unit in descriptor raises an error."""
     with pytest.raises(ValidationError, match="The payload descriptor must have a units of 'KW'"):
         _ = _create_event(
-            payload_descriptor=(
+            payload_descriptors=(
                 EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KVA),
             ),
             interval_period=None,

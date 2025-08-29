@@ -9,8 +9,9 @@ readme = "README.md"
 requires-python = ">=3.12, <4"
 dependencies = [
     "pydantic (>=2.11.2,<3.0.0)",
-    "openadr3-client (>=0.0.7,<1.0.0)",
+    "openadr3-client (>=0.0.11,<1.0.0)",
     "pycountry (>=24.6.1,<25.0.0)",
+    "python-decouple (>=3.8,<4.0)",
 ]
 
 [build-system]

@@ -560,14 +560,14 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "openadr3-client"
-version = "0.0.7"
+version = "0.0.11"
 description = ""
 optional = false
 python-versions = "<4,>=3.12"
 groups = ["main"]
 files = [
-    {file = "openadr3_client-0.0.7-py3-none-any.whl", hash = "sha256:e6175fa5e92e58f1b9b11b211f10f23ff2e42f3a25fc517f13734c9fd60a991e"},
-    {file = "openadr3_client-0.0.7.tar.gz", hash = "sha256:37f841e9123ebb05f1e7cda97f9e87f9e0289553d52f3e627cfd1c91a3e62d18"},
+    {file = "openadr3_client-0.0.11-py3-none-any.whl", hash = "sha256:ce050556a5ff0566671e7c8052f99c22c3f51dc1f8665124b372277f17366ec0"},
+    {file = "openadr3_client-0.0.11.tar.gz", hash = "sha256:2a975db33d7f72fa91a260c33822c9b3def037aa03e8fff5428d1922d4e3adf6"},
 ]
 
 [package.dependencies]
@@ -579,7 +579,6 @@ pandera = {version = ">=0.23.1,<0.24.0", extras = ["mypy"]}
 pycountry = ">=24.6.1,<25.0.0"
 pydantic = ">=2.11.2,<3.0.0"
 pydantic-extra-types = ">=2.10.3,<3.0.0"
-python-decouple = ">=3.8,<4.0"
 requests = ">=2.32.3,<3.0.0"
 requests-oauthlib = ">=2.0.0,<3.0.0"
 
@@ -1307,4 +1306,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12, <4"
-content-hash = "12145b5750fa8a9c8b464107675582e8a67509c57dbe0e643c3d267f4a877d72"
+content-hash = "2faa5f1ba03d9a0aba9d48c7b43b439052bfdf3a0f5788107ab7b732e039b93e"
