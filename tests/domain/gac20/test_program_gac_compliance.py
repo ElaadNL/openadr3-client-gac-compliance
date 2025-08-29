@@ -1,20 +1,21 @@
 import pytest
-
-from pydantic import ValidationError
 from openadr3_client.models.program.program import NewProgram
+from pydantic import ValidationError
 
 
 def _create_program(
     retailer_name: str | None = "1234567890123",
     program_type: str | None = "DSO_CPO_INTERFACE-1.0.0",
-    binding_events: bool = True,
+    binding_events: bool = True,  # noqa: FBT001, FBT002
 ) -> NewProgram:
-    """Helper function to create a program with the specified values.
+    """
+    Helper function to create a program with the specified values.
 
     Args:
         retailer_name: The retailer name of the program.
         program_type: The program type of the program.
         binding_events: Whether the program has binding events.
+
     """
     return NewProgram(
         program_name="test-program",
@@ -84,9 +85,7 @@ def test_invalid_program_type_version() -> None:
 
 def test_binding_events_false() -> None:
     """Test that a program with binding_events set to False raises an error."""
-    with pytest.raises(
-        ValidationError, match="The program must have bindingEvents set to True."
-    ):
+    with pytest.raises(ValidationError, match="The program must have bindingEvents set to True."):
         _ = _create_program(binding_events=False)
 
 
@@ -96,20 +95,12 @@ def test_program_multiple_errors_grouped() -> None:
         ValidationError,
         match="2 validation errors for NewProgram",
     ) as exc_info:
-        _ = _create_program(
-            program_type="DSO_CPO_INTERFACE-invalid", binding_events=False
-        )
+        _ = _create_program(program_type="DSO_CPO_INTERFACE-invalid", binding_events=False)
 
     grouped_errors = exc_info.value.errors()
 
     assert len(grouped_errors) == 2
     assert grouped_errors[0].get("type") == "value_error"
     assert grouped_errors[1].get("type") == "value_error"
-    assert (
-        grouped_errors[0].get("msg")
-        == "The program type must follow the format DSO_CPO_INTERFACE-x.x.x."
-    )
-    assert (
-        grouped_errors[1].get("msg")
-        == "The program must have bindingEvents set to True."
-    )
+    assert grouped_errors[0].get("msg") == "The program type must follow the format DSO_CPO_INTERFACE-x.x.x."
+    assert grouped_errors[1].get("msg") == "The program must have bindingEvents set to True."

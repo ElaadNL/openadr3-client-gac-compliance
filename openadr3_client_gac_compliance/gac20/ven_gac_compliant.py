@@ -1,15 +1,17 @@
 import re
-from openadr3_client.models.model import ValidatorRegistry, Model as ValidatorModel
-from openadr3_client.models.ven.ven import Ven
-import pycountry
 
+import pycountry
+from openadr3_client.models.model import Model as ValidatorModel
+from openadr3_client.models.model import ValidatorRegistry
+from openadr3_client.models.ven.ven import Ven
 from pydantic import ValidationError
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 
 @ValidatorRegistry.register(Ven, ValidatorModel())
 def ven_gac_compliant(self: Ven) -> Ven:
-    """Enforces that the ven is GAC compliant.
+    """
+    Enforces that the ven is GAC compliant.
 
     GAC enforces the following constraints for vens:
     - The ven must have a ven name
@@ -48,8 +50,6 @@ def ven_gac_compliant(self: Ven) -> Ven:
         )
 
     if validation_errors:
-        raise ValidationError.from_exception_data(
-            title=self.__class__.__name__, line_errors=validation_errors
-        )
+        raise ValidationError.from_exception_data(title=self.__class__.__name__, line_errors=validation_errors)
 
     return self

@@ -6,7 +6,8 @@ VALID_GAC_VERSIONS: list[str] = ["2.0"]
 
 
 def _gac_version_cast(value: str) -> str:
-    """Cast the GAC version to a string.
+    """
+    Cast the GAC version to a string.
 
     Args:
         value (str): The GAC version to cast.
@@ -16,9 +17,11 @@ def _gac_version_cast(value: str) -> str:
 
     Returns:
         str: The GAC version.
+
     """
     if value not in VALID_GAC_VERSIONS:
-        raise ValueError(f"Invalid GAC version: {value}")
+        msg = f"Invalid GAC version: {value}"
+        raise ValueError(msg)
     return value
 
 
