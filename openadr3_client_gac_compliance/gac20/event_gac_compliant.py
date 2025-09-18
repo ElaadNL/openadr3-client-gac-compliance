@@ -172,7 +172,7 @@ def _targets_compliant(self: Event) -> tuple[Event, list[InitErrorDetails]]:
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values, which is formatted as EAN.{18 digits}.",
+                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
                     ),
                     loc=("targets",),
                     input=self.targets,

@@ -304,6 +304,7 @@ def test_power_service_locations_target_value_empty() -> None:
             ),
         )
 
+
 def test_power_service_locations_invalid_value_format() -> None:
     """Test that power_service_locations target without an EAN18 value raises an error."""
     targets = (
@@ -313,7 +314,7 @@ def test_power_service_locations_invalid_value_format() -> None:
 
     with pytest.raises(
         ValueError,
-        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values, which is formatted as EAN.{18 digits}.",
+        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
     ):
         _ = _create_event(
             targets=targets,
