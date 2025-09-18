@@ -167,7 +167,7 @@ def _targets_compliant(self: Event) -> tuple[Event, list[InitErrorDetails]]:
                 )
             )
 
-        if not all(re.fullmatch(r"^EAN\.\d{18}$", v) for v in power_service_location.values):
+        if not all(re.fullmatch(r"^\d{18}$", v) for v in power_service_location.values):
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
