@@ -167,12 +167,12 @@ def _targets_compliant(self: Event) -> tuple[Event, list[InitErrorDetails]]:
                 )
             )
 
-        if not all(re.fullmatch(r"^EAN\d{15}$", v) for v in power_service_location.values):
+        if not all(re.fullmatch(r"^EAN\.\d{18}$", v) for v in power_service_location.values):
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
+                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values, which is formatted as EAN.{18 digits}.",
                     ),
                     loc=("targets",),
                     input=self.targets,

@@ -22,7 +22,7 @@ def _default_valid_payload_descriptors() -> tuple[EventPayloadDescriptor, ...]:
 def _default_valid_targets() -> tuple[Target, ...]:
     """Helper function to create a default target that is GAC compliant."""
     return (
-        Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("EAN.123456789012345678",)),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
 
@@ -304,17 +304,16 @@ def test_power_service_locations_target_value_empty() -> None:
             ),
         )
 
-
 def test_power_service_locations_invalid_value_format() -> None:
     """Test that power_service_locations target without an EAN18 value raises an error."""
     targets = (
-        Target(type="POWER_SERVICE_LOCATION", values=("invalid-value",)),
+        Target(type="POWER_SERVICE_LOCATION", values=("123456789012345678",)),
         Target(type="VEN_NAME", values=("test-ven",)),
     )
 
     with pytest.raises(
         ValueError,
-        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
+        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values, which is formatted as EAN.{18 digits}.",
     ):
         _ = _create_event(
             targets=targets,
