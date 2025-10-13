@@ -1,6 +1,22 @@
-from openadr3_client_gac_compliance.config import GAC_VERSION
+"""
+OpenADR3 GAC Compliance Plugin.
 
-if GAC_VERSION == "2.0":
-    import openadr3_client_gac_compliance.gac20.event_gac_compliant
-    import openadr3_client_gac_compliance.gac20.program_gac_compliant
-    import openadr3_client_gac_compliance.gac20.ven_gac_compliant  # noqa: F401
+This package provides validation plugins for OpenADR3 models to ensure compliance
+with the Grid Aware Charging (GAC) specification.
+
+The main entry point is the Gac20ValidatorPlugin which can be registered
+with the OpenADR3 client's validator plugin registry.
+
+Example:
+    ```python
+    from openadr3_client.plugin import ValidatorPluginRegistry
+    from openadr3_client_gac_compliance.plugin import Gac20ValidatorPlugin
+    from openadr3_client_gac_compliance.gac20.gac_plugin import GacVersion
+
+    # Register the GAC validation plugin
+    ValidatorPluginRegistry.register_plugin(
+        Gac20ValidatorPlugin.setup(gac_version=GacVersion.VERSION_2_0)
+    )
+    ```
+
+"""

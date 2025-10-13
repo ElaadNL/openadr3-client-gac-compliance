@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from openadr3_client.models.common.interval import Interval
@@ -11,7 +12,10 @@ from openadr3_client.models.event.event_payload import (
     EventPayloadDescriptor,
     EventPayloadType,
 )
+from openadr3_client.plugin import ValidatorPluginRegistry
 from pydantic import ValidationError
+
+from openadr3_client_gac_compliance.gac20.plugin import Gac20ValidatorPlugin
 
 
 def _default_valid_payload_descriptors() -> tuple[EventPayloadDescriptor, ...]:
@@ -54,6 +58,15 @@ def _create_event(
         interval_period=interval_period,
         intervals=intervals,
     )
+
+
+@pytest.fixture(autouse=True)
+def clear_plugins():
+    """Clear plugins before each test and register GAC plugin."""
+    ValidatorPluginRegistry.clear_plugins()
+    ValidatorPluginRegistry.register_plugin(Gac20ValidatorPlugin.setup())
+    yield
+    ValidatorPluginRegistry.clear_plugins()
 
 
 def test_continuous_interval_definition_valid() -> None:
@@ -130,7 +143,7 @@ def test_combined_interval_definition_not_allowed() -> None:
     """
     with pytest.raises(
         ValidationError,
-        match="Either 'interval_period' must be set on the event once, or every interval must have its own 'interval_period'.",  # noqa: E501
+        match="'interval_period' must either be set on the event-level, or for each interval.",
     ):
         _ = _create_event(
             interval_period=IntervalPeriod(
@@ -261,7 +274,7 @@ def test_multiple_ven_name_targets() -> None:
     gac_required_targets = _default_valid_targets()
     additional_target = (Target(type="VEN_NAME", values=("test-target",)),)
 
-    with pytest.raises(ValidationError, match="The event must contain only one VEN_NAME target."):
+    with pytest.raises(ValidationError, match="The event must contain exactly one VEN_NAME target."):
         _ = _create_event(
             targets=gac_required_targets + additional_target,
             interval_period=None,
@@ -287,7 +300,7 @@ def test_power_service_locations_target_value_empty() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The POWER_SERVICE_LOCATION target value cannot be empty.",
+        match="The POWER_SERVICE_LOCATION target value may not be empty.",
     ):
         _ = _create_event(
             targets=targets,
@@ -339,7 +352,7 @@ def test_ven_name_target_value_empty() -> None:
         Target(type="VEN_NAME", values=()),
     )
 
-    with pytest.raises(ValidationError, match="The VEN_NAME target value cannot be empty."):
+    with pytest.raises(ValidationError, match="The VEN_NAME target value may not be empty."):
         _ = _create_event(
             targets=targets,
             interval_period=None,
@@ -365,7 +378,7 @@ def test_ven_name_target_too_long() -> None:
 
     with pytest.raises(
         ValueError,
-        match="The VEN_NAME target value must be a list of 'ven object name' values",
+        match="The VEN_NAME target value must be a list of 'VEN name' values",
     ):
         _ = _create_event(
             targets=targets,
@@ -392,7 +405,7 @@ def test_ven_name_target_too_short() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The VEN_NAME target value must be a list of 'ven object name' values",
+        match="The VEN_NAME target value must be a list of 'VEN name' values",
     ):
         _ = _create_event(
             targets=targets,
@@ -666,3 +679,176 @@ def test_event_multiple_errors_grouped() -> None:
     assert grouped_errors[1].get("type") == "value_error"
     assert grouped_errors[0].get("msg") == "The event must contain a POWER_SERVICE_LOCATION target."
     assert grouped_errors[1].get("msg") == "The event must contain a VEN_NAME target."
+
+
+def test_plugin_system_integration() -> None:
+    """Test that the plugin system correctly integrates with the Event validation."""
+    validators = ValidatorPluginRegistry.get_model_validators(NewEvent)
+    assert len(validators) == 1
+
+    valid_event = _create_event(
+        intervals=(
+            Interval(
+                id=0,
+                interval_period=IntervalPeriod(
+                    start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                    duration=timedelta(minutes=5),
+                ),
+                payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+            ),
+        ),
+    )
+    assert valid_event.event_name == "test-event"
+
+    with pytest.raises(ValidationError) as exc_info:
+        _create_event(
+            targets=(),
+            priority=5,
+            interval_period=IntervalPeriod(
+                start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                duration=timedelta(minutes=5),
+            ),
+            intervals=(
+                Interval(
+                    id=0,
+                    interval_period=None,
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                ),
+            ),
+        )
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 3
+
+    priority_error = errors[0]
+    assert priority_error["loc"] == ("priority",)
+    assert "priority" in priority_error["msg"]
+
+    targets_error = errors[1]
+    assert targets_error["loc"] == ("targets",)
+    assert "POWER_SERVICE_LOCATION" in targets_error["msg"] or "VEN_NAME" in targets_error["msg"]
+
+    targets_error = errors[2]
+    assert targets_error["loc"] == ("targets",)
+    assert "VEN_NAME" in targets_error["msg"]
+
+
+def test_plugin_with_edge_cases() -> None:
+    """Test plugin validation with various edge cases."""
+    test_cases: list[tuple[str, dict[str, Any], int]] = [
+        # description, kwargs, expected_error_count
+        (
+            "Priority + missing targets",
+            {
+                "priority": 5,
+                "targets": (),
+                "intervals": (
+                    Interval(
+                        id=0,
+                        interval_period=IntervalPeriod(
+                            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                            duration=timedelta(minutes=5),
+                        ),
+                        payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                    ),
+                ),
+            },
+            3,  # priority + POWER_SERVICE_LOCATION + VEN_NAME
+        ),
+        (
+            "Priority only",
+            {
+                "priority": 10,
+                "intervals": (
+                    Interval(
+                        id=0,
+                        interval_period=IntervalPeriod(
+                            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                            duration=timedelta(minutes=5),
+                        ),
+                        payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                    ),
+                ),
+            },
+            1,  # priority only
+        ),
+        (
+            "Missing targets only",
+            {
+                "targets": (),
+                "intervals": (
+                    Interval(
+                        id=0,
+                        interval_period=IntervalPeriod(
+                            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                            duration=timedelta(minutes=5),
+                        ),
+                        payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                    ),
+                ),
+            },
+            2,  # POWER_SERVICE_LOCATION + VEN_NAME
+        ),
+        (
+            "Missing POWER_SERVICE_LOCATION only",
+            {
+                "targets": (Target(type="VEN_NAME", values=("test-ven",)),),
+                "intervals": (
+                    Interval(
+                        id=0,
+                        interval_period=IntervalPeriod(
+                            start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                            duration=timedelta(minutes=5),
+                        ),
+                        payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                    ),
+                ),
+            },
+            1,  # POWER_SERVICE_LOCATION only
+        ),
+    ]
+
+    for description, kwargs, expected_error_count in test_cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _create_event(**kwargs)
+
+        errors = exc_info.value.errors()
+        assert len(errors) == expected_error_count, (
+            f"Expected {expected_error_count} errors for '{description}'",
+            f", got {len(errors)}: {[e['msg'] for e in errors]}",
+        )
+
+
+def test_plugin_error_details() -> None:
+    """Test that plugin errors contain correct location and input information."""
+    with pytest.raises(ValidationError) as exc_info:
+        _create_event(
+            targets=(),
+            priority=10,
+            interval_period=None,
+            intervals=(
+                Interval(
+                    id=0,
+                    interval_period=IntervalPeriod(
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                        duration=timedelta(minutes=5),
+                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),),
+                ),
+            ),
+        )
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 3
+
+    assert errors[0].get("type") == "value_error"
+    assert errors[0].get("loc") == ("priority",)
+    assert errors[0].get("input") == 10
+
+    assert errors[1].get("type") == "value_error"
+    assert errors[1].get("loc") == ("targets",)
+    assert errors[1].get("input") == ()
+
+    assert errors[2].get("type") == "value_error"
+    assert errors[2].get("loc") == ("targets",)
+    assert errors[2].get("input") == ()
