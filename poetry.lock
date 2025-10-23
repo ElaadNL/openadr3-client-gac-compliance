@@ -504,14 +504,14 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "openadr3-client"
-version = "0.0.12a1"
+version = "1.0.0a2"
 description = ""
 optional = false
 python-versions = "<4,>=3.12"
 groups = ["main"]
 files = [
-    {file = "openadr3_client-0.0.12a1-py3-none-any.whl", hash = "sha256:c39a0bb9c97490e25212f460099978607d1023a396c982552a764b76f384ce4e"},
-    {file = "openadr3_client-0.0.12a1.tar.gz", hash = "sha256:530257e24b2f4be73b54f30518f4c47aa58ac891fee666f47dbc46a76589af0a"},
+    {file = "openadr3_client-1.0.0a2-py3-none-any.whl", hash = "sha256:bc5fb771d3199bd5bc66480972c5a8648d1440bdc283851e97dea08ea9371ad4"},
+    {file = "openadr3_client-1.0.0a2.tar.gz", hash = "sha256:3a02cfd0adc3974f7e49c429bac86250c133b8f2b5d4211f9b9eee547a5e5d94"},
 ]
 
 [package.dependencies]
@@ -1003,4 +1003,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12, <4"
-content-hash = "4f78a30b737cabb9dde2fe4c87c3a968fc4e6498ff8270ac6e3966395941338c"
+content-hash = "bccc57ed6c245da74125be521850b10ef0cd9d888918fc402646c205e2e024fb"
