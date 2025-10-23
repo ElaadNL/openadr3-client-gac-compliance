@@ -630,8 +630,8 @@ def test_event_interval_no_payload() -> None:
         )
 
 
-def test_event_interval_multiple_payloads() -> None:
-    """Test that an event interval with multiple payloads raises an error."""
+def test_event_interval_multiple_payload_types() -> None:
+    """Test that an event interval with multiple payload types raises an error."""
     with pytest.raises(ValidationError, match="The event interval must have exactly one payload."):
         _ = _create_event(
             interval_period=None,
@@ -646,6 +646,24 @@ def test_event_interval_multiple_payloads() -> None:
                         EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0,)),
                         EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(2.0,)),
                     ),
+                ),
+            ),
+        )
+
+
+def test_event_interval_multiple_payload_values() -> None:
+    """Test that an event interval with multiple payload values raises an error."""
+    with pytest.raises(ValidationError, match="The event interval payload must have exactly one value per payload."):
+        _ = _create_event(
+            interval_period=None,
+            intervals=(
+                Interval(
+                    id=0,
+                    interval_period=IntervalPeriod(
+                        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
+                        duration=timedelta(minutes=5),
+                    ),
+                    payloads=(EventPayload(type=EventPayloadType.IMPORT_CAPACITY_LIMIT, values=(1.0, 2.0)),),
                 ),
             ),
         )
