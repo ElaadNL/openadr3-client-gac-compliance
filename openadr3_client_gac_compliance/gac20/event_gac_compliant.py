@@ -359,6 +359,18 @@ def _event_interval_gac_compliant(self: Event) -> list[InitErrorDetails]:
                         ctx={},
                     )
                 )
+            if len(payload.values) > 1:
+                validation_errors.append(
+                    InitErrorDetails(
+                        type=PydanticCustomError(
+                            "value_error",
+                            "The event interval payload must have exactly one value per payload.",
+                        ),
+                        loc=("intervals",),
+                        input=self.intervals,
+                        ctx={},
+                    )
+                )
 
     return validation_errors
 
