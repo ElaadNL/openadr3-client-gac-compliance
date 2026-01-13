@@ -12,3 +12,12 @@ Registering the plugin is done using the global ValidatorPluginRegistry class:
         Gac20ValidatorPlugin().setup()
     )
 ```
+
+## License
+
+This project is licensed under the Apache-2.0 - see LICENSE for details.
+
+## Licenses third-party libraries
+
+This project includes third-party libraries, which are licensed under their own respective Open-Source licenses.
+SPDX-License-Identifier headers are used to show which license is applicable. The concerning license files can be found in the LICENSES directory.

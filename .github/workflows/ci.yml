@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -28,19 +28,19 @@ jobs:
 
       - id: install_dependencies
         run: uv sync --locked --all-extras --dev
-      
+
       - name: Run formatter
         run: |
           mkdir format-logs
           uv run task format-ci > format-logs/ruff-lint.log
-      
+
       - name: Upload formatter logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: formatter-log
           path: format-logs
-      
+
       - name: Run linter
         run: |
           mkdir linter-logs
@@ -64,6 +64,30 @@ jobs:
         with:
           name: mypy-log
           path: mypy-logs
+
+      - name: Run bandit
+        run: |
+          mkdir bandit-logs
+          uv run task bandit > bandit-logs/bandit-log.log
+
+      - name: Upload bandit logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-log
+          path: bandit-logs
+
+      - name: Run reuse
+        run: |
+          mkdir reuse-logs
+          uv run task reuse > reuse-logs/reuse-log.log
+
+      - name: Upload reuse logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reuse-log
+          path: reuse-logs
 
   tests:
     runs-on: ubuntu-latest

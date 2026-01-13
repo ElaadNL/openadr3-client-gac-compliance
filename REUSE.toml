@@ -1,0 +1,11 @@
+version = 1
+
+# Computer-generated files.
+# TODO: remove uv.lock.license when possible, see https://codeberg.org/fsfe/reuse-tool/pulls/1303
+[[annotations]]
+path = [
+    "uv.lock",
+    ".python-version"
+]
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"
