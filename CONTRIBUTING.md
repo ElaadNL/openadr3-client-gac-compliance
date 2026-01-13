@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Contributors to openadr3-client-gac-compliance <https://github.com/ElaadNL/openadr3-client-gac-compliance>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # How to contribute
 
 We'd love to accept your patches and contributions to this project. There are just a few guidelines you need to follow.

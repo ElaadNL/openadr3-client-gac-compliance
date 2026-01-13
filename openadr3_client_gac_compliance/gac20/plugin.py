@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to openadr3-client-gac-compliance <https://github.com/ElaadNL/openadr3-client-gac-compliance>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """GAC compliance plugin for OpenADR3 client."""
 
 from typing import Any
