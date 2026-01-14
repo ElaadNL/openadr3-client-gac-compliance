@@ -2,4 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Contains tests for the domain module."""
+version: 2
+
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"

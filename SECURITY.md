@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: Contributors to openadr3-client-gac-compliance <https://github.com/ElaadNL/openadr3-client-gac-compliance>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Security Policy
 
 Thank you for taking the time to report a vulnerability.

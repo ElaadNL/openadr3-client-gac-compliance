@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to openadr3-client-gac-compliance <https://github.com/ElaadNL/openadr3-client-gac-compliance>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Module which implements GAC compliance validators for the program OpenADR3 types."""
 
 import re
