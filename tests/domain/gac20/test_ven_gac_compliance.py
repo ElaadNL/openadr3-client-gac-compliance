@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import re
+
 import pytest
 from openadr3_client.models.ven.ven import NewVen
 from openadr3_client.plugin import ValidatorPluginRegistry
@@ -39,7 +41,7 @@ def test_ven_gac_compliant_invalid_format() -> None:
     """Test that a VEN with a VEN name that does not follow the eMI3 identifier format is rejected."""
     with pytest.raises(
         ValidationError,
-        match="The VEN name must be formatted as an eMI3 identifier.",
+        match=re.escape("The VEN name must be formatted as an eMI3 identifier."),
     ):
         _ = _create_ven("ABCDEFG")
 
@@ -48,7 +50,7 @@ def test_ven_gac_compliant_invalid_country_code() -> None:
     """Test that a VEN with a VEN name that does not have a valid ISO 3166-1 alpha-2 country code is rejected."""
     with pytest.raises(
         ValidationError,
-        match="The first two characters of the VEN name must be a valid ISO 3166-1 alpha-2 country code.",
+        match=re.escape("The first two characters of the VEN name must be a valid ISO 3166-1 alpha-2 country code."),
     ):
         _ = _create_ven("ZZ-123")
 
@@ -57,7 +59,7 @@ def test_ven_multiple_errors_grouped() -> None:
     """Test that multiple errors are grouped together and returned as a single error."""
     with pytest.raises(
         ValidationError,
-        match="2 validation errors for NewVen",
+        match=re.escape("2 validation errors for NewVen"),
     ) as exc_info:
         _ = _create_ven("ZZ-123455667")
 
