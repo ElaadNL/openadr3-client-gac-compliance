@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -147,7 +148,7 @@ def test_combined_interval_definition_not_allowed() -> None:
     """
     with pytest.raises(
         ValidationError,
-        match="'interval_period' must either be set on the event-level, or for each interval.",
+        match=re.escape("'interval_period' must either be set on the event-level, or for each interval."),
     ):
         _ = _create_event(
             interval_period=IntervalPeriod(
@@ -209,7 +210,7 @@ def test_missing_power_service_locations() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The event must contain a POWER_SERVICE_LOCATION target.",
+        match=re.escape("The event must contain a POWER_SERVICE_LOCATION target."),
     ):
         _ = _create_event(
             targets=ven_name_target_only,
@@ -231,7 +232,7 @@ def test_missing_ven_name() -> None:
     """Test that missing VEN_NAME target raises an error."""
     power_service_locations_target_only = (Target(type="POWER_SERVICE_LOCATION", values=("EAN123456789012345",)),)
 
-    with pytest.raises(ValidationError, match="The event must contain a VEN_NAME target."):
+    with pytest.raises(ValidationError, match=re.escape("The event must contain a VEN_NAME target.")):
         _ = _create_event(
             targets=power_service_locations_target_only,
             interval_period=None,
@@ -255,7 +256,7 @@ def test_multiple_power_service_location_targets() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The event must contain exactly one POWER_SERVICE_LOCATION target.",
+        match=re.escape("The event must contain exactly one POWER_SERVICE_LOCATION target."),
     ):
         _ = _create_event(
             targets=gac_required_targets + additional_target,
@@ -278,7 +279,7 @@ def test_multiple_ven_name_targets() -> None:
     gac_required_targets = _default_valid_targets()
     additional_target = (Target(type="VEN_NAME", values=("test-target",)),)
 
-    with pytest.raises(ValidationError, match="The event must contain exactly one VEN_NAME target."):
+    with pytest.raises(ValidationError, match=re.escape("The event must contain exactly one VEN_NAME target.")):
         _ = _create_event(
             targets=gac_required_targets + additional_target,
             interval_period=None,
@@ -304,7 +305,7 @@ def test_power_service_locations_target_value_empty() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The POWER_SERVICE_LOCATION target value may not be empty.",
+        match=re.escape("The POWER_SERVICE_LOCATION target value may not be empty."),
     ):
         _ = _create_event(
             targets=targets,
@@ -331,7 +332,7 @@ def test_power_service_locations_invalid_value_format() -> None:
 
     with pytest.raises(
         ValueError,
-        match="The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
+        match=re.escape("The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values."),
     ):
         _ = _create_event(
             targets=targets,
@@ -356,7 +357,7 @@ def test_ven_name_target_value_empty() -> None:
         Target(type="VEN_NAME", values=()),
     )
 
-    with pytest.raises(ValidationError, match="The VEN_NAME target value may not be empty."):
+    with pytest.raises(ValidationError, match=re.escape("The VEN_NAME target value may not be empty.")):
         _ = _create_event(
             targets=targets,
             interval_period=None,
@@ -382,7 +383,7 @@ def test_ven_name_target_too_long() -> None:
 
     with pytest.raises(
         ValueError,
-        match="The VEN_NAME target value must be a list of 'VEN name' values",
+        match=re.escape("The VEN_NAME target value must be a list of 'VEN name' values"),
     ):
         _ = _create_event(
             targets=targets,
@@ -409,7 +410,7 @@ def test_ven_name_target_too_short() -> None:
 
     with pytest.raises(
         ValidationError,
-        match="The VEN_NAME target value must be a list of 'VEN name' values",
+        match=re.escape("The VEN_NAME target value must be a list of 'VEN name' values"),
     ):
         _ = _create_event(
             targets=targets,
@@ -429,7 +430,7 @@ def test_ven_name_target_too_short() -> None:
 
 def test_no_payload_descriptors() -> None:
     """Test that an event with no payload descriptor raises an error."""
-    with pytest.raises(ValueError, match="The event must have a payload descriptor."):
+    with pytest.raises(ValueError, match=re.escape("The event must have a payload descriptor.")):
         _ = _create_event(
             payload_descriptors=None,
             interval_period=None,
@@ -448,7 +449,7 @@ def test_no_payload_descriptors() -> None:
 
 def test_multiple_payload_descriptors() -> None:
     """Test that an event with multiple payload descriptors raises an error."""
-    with pytest.raises(ValidationError, match="The event must have exactly one payload descriptor."):
+    with pytest.raises(ValidationError, match=re.escape("The event must have exactly one payload descriptor.")):
         _ = _create_event(
             payload_descriptors=(
                 EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KW),
@@ -472,7 +473,7 @@ def test_invalid_payload_type_in_descriptors() -> None:
     """Test that invalid payload type in descriptor raises an error."""
     with pytest.raises(
         ValidationError,
-        match="The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
+        match=re.escape("The payload descriptor must have a payload type of 'IMPORT_CAPACITY_LIMIT'."),
     ):
         _ = _create_event(
             payload_descriptors=(EventPayloadDescriptor(payload_type=EventPayloadType.SIMPLE, units=Unit.KW),),
@@ -492,7 +493,7 @@ def test_invalid_payload_type_in_descriptors() -> None:
 
 def test_invalid_unit_in_descriptors() -> None:
     """Test that invalid unit in descriptor raises an error."""
-    with pytest.raises(ValidationError, match="The payload descriptor must have a units of 'KW'"):
+    with pytest.raises(ValidationError, match=re.escape("The payload descriptor must have a units of 'KW'")):
         _ = _create_event(
             payload_descriptors=(
                 EventPayloadDescriptor(payload_type=EventPayloadType.IMPORT_CAPACITY_LIMIT, units=Unit.KVA),
@@ -515,7 +516,7 @@ def test_priority_set() -> None:
     """Test that a priority that is set raises an error for GAC 2.0 compliance."""
     with pytest.raises(
         ValidationError,
-        match="The event must not have a priority set for GAC 2.0 compliance",
+        match=re.escape("The event must not have a priority set for GAC 2.0 compliance"),
     ):
         _ = _create_event(
             priority=1,
@@ -555,7 +556,7 @@ def test_non_increasing_interval_ids() -> None:
     """Test that non-increasing interval IDs raises an error."""
     with pytest.raises(
         ValidationError,
-        match="The event interval must have an id value that is strictly increasing.",
+        match=re.escape("The event interval must have an id value that is strictly increasing."),
     ):
         _ = _create_event(
             interval_period=None,
@@ -584,7 +585,7 @@ def test_interval_payload_type_invalid() -> None:
     """Test that an invalid payload type in an interval payload raises an error."""
     with pytest.raises(
         ValidationError,
-        match="The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'.",
+        match=re.escape("The event interval payload must have a payload type of 'IMPORT_CAPACITY_LIMIT'."),
     ):
         _ = _create_event(
             interval_period=None,
@@ -603,7 +604,7 @@ def test_interval_payload_type_invalid() -> None:
 
 def test_event_no_intervals() -> None:
     """Test that an event with no intervals raises an error."""
-    with pytest.raises(ValueError, match="NewEvent must contain at least one interval"):
+    with pytest.raises(ValueError, match=re.escape("NewEvent must contain at least one interval")):
         _ = _create_event(
             interval_period=IntervalPeriod(
                 start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
@@ -615,7 +616,7 @@ def test_event_no_intervals() -> None:
 
 def test_event_interval_no_payload() -> None:
     """Test that an event interval with no payload raises an error."""
-    with pytest.raises(ValidationError, match="interval payload must contain at least one payload"):
+    with pytest.raises(ValidationError, match=re.escape("interval payload must contain at least one payload")):
         _ = _create_event(
             interval_period=IntervalPeriod(
                 start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC),
@@ -636,7 +637,7 @@ def test_event_interval_no_payload() -> None:
 
 def test_event_interval_multiple_payload_types() -> None:
     """Test that an event interval with multiple payload types raises an error."""
-    with pytest.raises(ValidationError, match="The event interval must have exactly one payload."):
+    with pytest.raises(ValidationError, match=re.escape("The event interval must have exactly one payload.")):
         _ = _create_event(
             interval_period=None,
             intervals=(
@@ -657,7 +658,10 @@ def test_event_interval_multiple_payload_types() -> None:
 
 def test_event_interval_multiple_payload_values() -> None:
     """Test that an event interval with multiple payload values raises an error."""
-    with pytest.raises(ValidationError, match="The event interval payload must have exactly one value per payload."):
+    with pytest.raises(
+        ValidationError,
+        match=re.escape("The event interval payload must have exactly one value per payload."),
+    ):
         _ = _create_event(
             interval_period=None,
             intervals=(
