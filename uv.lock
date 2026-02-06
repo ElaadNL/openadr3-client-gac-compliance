@@ -626,7 +626,7 @@ wheels = [
 
 [[package]]
 name = "openadr3-client-gac-compliance"
-version = "3.0.1"
+version = "3.0.3"
 source = { editable = "." }
 dependencies = [
     { name = "openadr3-client" },
