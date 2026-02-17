@@ -50,4 +50,4 @@ def validate_ven_gac_compliant(ven: Ven) -> list[InitErrorDetails] | None:
             )
         )
 
-    return validation_errors if validation_errors else None
+    return validation_errors or None
