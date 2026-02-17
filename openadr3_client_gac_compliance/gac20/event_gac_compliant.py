@@ -415,4 +415,4 @@ def validate_event_gac_compliant(event: Event) -> list[InitErrorDetails] | None:
     errors = _event_interval_gac_compliant(event)
     validation_errors.extend(errors)
 
-    return validation_errors if validation_errors else None
+    return validation_errors or None

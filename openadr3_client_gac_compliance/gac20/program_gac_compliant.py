@@ -101,4 +101,4 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
             )
         )
 
-    return validation_errors if validation_errors else None
+    return validation_errors or None
