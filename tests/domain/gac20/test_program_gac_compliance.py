@@ -5,7 +5,7 @@
 import re
 
 import pytest
-from openadr3_client.models.program.program import NewProgram
+from openadr3_client.oadr301.models.program.program import NewProgram
 from openadr3_client.plugin import ValidatorPluginRegistry
 from pydantic import ValidationError
 

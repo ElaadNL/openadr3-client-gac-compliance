@@ -19,8 +19,8 @@ as the program object does not contain the events, these are stored separately i
 import re
 from itertools import pairwise
 
-from openadr3_client.models.event.event import Event
-from openadr3_client.models.event.event_payload import EventPayloadType
+from openadr3_client.oadr301.models.event.event import Event
+from openadr3_client.oadr301.models.event.event_payload import EventPayloadType
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 INTERVAL_PERIOD_ERROR_MESSAGE = "'interval_period' must either be set on the event-level, or for each interval."
