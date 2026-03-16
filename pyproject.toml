@@ -4,7 +4,7 @@
 
 [project]
 name = "openadr3-client-gac-compliance"
-version = "3.0.3"
+dynamic = ["version"]
 description = ""
 authors = [
     { name = "Nick van der Burgt", email = "nick.van.der.burgt@elaad.nl" },
@@ -27,8 +27,11 @@ Changelog = "https://github.com/ElaadNL/openadr3-client/releases"
 
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [dependency-groups]
 dev = [
