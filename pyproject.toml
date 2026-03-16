@@ -15,7 +15,7 @@ readme = "README.md"
 license = "Apache-2.0"
 dependencies = [
     "pydantic (>=2.11.2,<3.0.0)",
-    "openadr3-client (>=1.0.0a1,<2.0.0)",
+    "openadr3-client (>=2.0.4,<3.0.0)",
     "pycountry (>=24.6.1,<25.0.0)",
 ]
 

@@ -7,16 +7,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from openadr3_client.models.common.interval import Interval
-from openadr3_client.models.common.interval_period import IntervalPeriod
-from openadr3_client.models.common.target import Target
-from openadr3_client.models.common.unit import Unit
-from openadr3_client.models.event.event import NewEvent
-from openadr3_client.models.event.event_payload import (
+from openadr3_client._models.common.interval import Interval
+from openadr3_client._models.common.interval_period import IntervalPeriod
+from openadr3_client.oadr301.models.event.event import NewEvent
+from openadr3_client.oadr301.models.event.event_payload import (
     EventPayload,
     EventPayloadDescriptor,
     EventPayloadType,
 )
+from openadr3_client.oadr301.models.target import Target
+from openadr3_client.oadr301.models.unit import Unit
 from openadr3_client.plugin import ValidatorPluginRegistry
 from pydantic import ValidationError
 

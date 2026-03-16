@@ -6,9 +6,9 @@
 
 from typing import Any
 
-from openadr3_client.models.event.event import Event
-from openadr3_client.models.program.program import Program
-from openadr3_client.models.ven.ven import Ven
+from openadr3_client.oadr301.models.event.event import Event
+from openadr3_client.oadr301.models.program.program import Program
+from openadr3_client.oadr301.models.ven.ven import Ven
 from openadr3_client.plugin import ValidatorPlugin
 
 from openadr3_client_gac_compliance.gac20.event_gac_compliant import validate_event_gac_compliant

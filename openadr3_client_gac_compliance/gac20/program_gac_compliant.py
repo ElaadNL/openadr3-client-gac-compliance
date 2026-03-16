@@ -6,7 +6,7 @@
 
 import re
 
-from openadr3_client.models.program.program import Program
+from openadr3_client.oadr301.models.program.program import Program
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 
