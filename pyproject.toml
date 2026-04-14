@@ -36,7 +36,7 @@ source = "vcs"
 [dependency-groups]
 dev = [
     "mypy>=1.15.0,<2",
-    "ruff>=0.11.4,<0.16",
+    "ruff>=0.15.10,<0.16",
     "pytest>=8.3.5,<10",
     "pytest-cov>=6.1.1,<8",
     "taskipy>=1.14.1,<2",
