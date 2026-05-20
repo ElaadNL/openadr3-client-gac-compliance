@@ -36,13 +36,13 @@ source = "vcs"
 [dependency-groups]
 dev = [
     "mypy>=2.1.0,<3",
-    "ruff>=0.11.4,<0.16",
+    "ruff>=0.15.12,<0.16",
     "pytest>=9.0.3,<10",
     "pytest-cov>=6.1.1,<8",
     "taskipy>=1.14.1,<2",
     "bandit[toml]>=1.9.4",
     "reuse>=6.2.0",
-    "pre-commit>=4.5.1",
+    "pre-commit>=4.6.0",
 ]
 
 [tool.hatch.build.targets.sdist]
