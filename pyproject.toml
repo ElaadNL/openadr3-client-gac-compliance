@@ -46,10 +46,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["openadr3_client"]
+include = ["openadr3_client_gac_compliance"]
 
 [tool.hatch.build.targets.wheel]
-include = ["openadr3_client"]
+include = ["openadr3_client_gac_compliance"]
 
 [[tool.mypy.overrides]]
 module = ["openadr3_client"]
