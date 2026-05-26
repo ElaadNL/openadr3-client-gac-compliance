@@ -667,7 +667,7 @@ signedtoken = [
 
 [[package]]
 name = "openadr3-client"
-version = "2.0.4"
+version = "2.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "oauthlib", extra = ["signedtoken"] },
@@ -677,9 +677,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-oauthlib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0f/9b/1187ed5d6d0db5fcb40a0a7fa5087755c9378a18aba033aad0251f67dfa5/openadr3_client-2.0.4.tar.gz", hash = "sha256:8671e96a152a25b19bb7b46bf955356376aef7c085393bab33fc2c45e95509d5", size = 63033, upload-time = "2026-03-16T10:01:37.593Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/35/38/713d6f8a9e8c33bde8d387338f048db3d91155494fb15bf7c9bc116cf46a/openadr3_client-2.0.5.tar.gz", hash = "sha256:39b638b0bbbe8bc21790b413bdb21303013ec11efc44f5ebe35c5e6018b3733b", size = 62952, upload-time = "2026-05-22T10:46:16.446Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/3b/ee4fd55d343097d0fd8f27b590c936d57a31d78daa6e0da02641162334a3/openadr3_client-2.0.4-py3-none-any.whl", hash = "sha256:369de74ac26acbaf0732a2046d566ed5a3da692af807d388235ed2a240e6e945", size = 139814, upload-time = "2026-03-16T10:01:35.937Z" },
+    { url = "https://files.pythonhosted.org/packages/80/e3/5834a1e23d1267dd9d0a91db68a638b30f2cbea41e495e4a7bfd8f043805/openadr3_client-2.0.5-py3-none-any.whl", hash = "sha256:89cd2f2b9bc083c09595d981003f371e2369f1df27dc0ef870147c56e9b8e33d", size = 139738, upload-time = "2026-05-22T10:46:14.973Z" },
 ]
 
 [[package]]
@@ -705,7 +705,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "openadr3-client", specifier = ">=2.0.4,<3.0.0" },
+    { name = "openadr3-client", specifier = ">=2.0.5,<3.0.0" },
     { name = "pycountry", specifier = ">=24.6.1,<27.0.0" },
     { name = "pydantic", specifier = ">=2.13.4,<3.0.0" },
 ]

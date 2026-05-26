@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Module which implements GAC 2.0 compliance validators for the event OpenADR3 types.
+Module which implements GAC 2.1 compliance validators for the event OpenADR3 types.
 
 This module validates all the object constraints and requirements on the OpenADR3 events resource
 as specified in the Grid aware charging (GAC) specification.
@@ -19,8 +19,8 @@ as the program object does not contain the events, these are stored separately i
 import re
 from itertools import pairwise
 
-from openadr3_client.oadr301.models.event.event import Event
-from openadr3_client.oadr301.models.event.event_payload import EventPayloadType
+from openadr3_client.oadr310.models.event.event import Event
+from openadr3_client.oadr310.models.event.event_payload import EventPayloadType
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 INTERVAL_PERIOD_ERROR_MESSAGE = "'interval_period' must either be set on the event-level, or for each interval."
@@ -98,116 +98,18 @@ def _targets_compliant(self: Event) -> list[InitErrorDetails]:
     validation_errors: list[InitErrorDetails] = []
     targets = self.targets or ()
 
-    power_service_locations = [t for t in targets if t.type == "POWER_SERVICE_LOCATION"]
-    ven_names = [t for t in targets if t.type == "VEN_NAME"]
-
-    if not power_service_locations:
+    if not all(re.fullmatch(r"^\d{18}$", target) for target in targets):
         validation_errors.append(
             InitErrorDetails(
                 type=PydanticCustomError(
                     "value_error",
-                    "The event must contain a POWER_SERVICE_LOCATION target.",
+                    "The targets value must be a list of 'EAN18' values.",
                 ),
                 loc=("targets",),
                 input=self.targets,
                 ctx={},
             )
         )
-
-    if not ven_names:
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The event must contain a VEN_NAME target.",
-                ),
-                loc=("targets",),
-                input=self.targets,
-                ctx={},
-            )
-        )
-
-    if len(power_service_locations) > 1:
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The event must contain exactly one POWER_SERVICE_LOCATION target.",
-                ),
-                loc=("targets",),
-                input=self.targets,
-                ctx={},
-            )
-        )
-
-    if len(ven_names) > 1:
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The event must contain exactly one VEN_NAME target.",
-                ),
-                loc=("targets",),
-                input=self.targets,
-                ctx={},
-            )
-        )
-
-    if power_service_locations and ven_names and len(power_service_locations) == 1 and len(ven_names) == 1:
-        power_service_location = power_service_locations[0]
-        ven_name = ven_names[0]
-
-        if len(power_service_location.values) == 0:
-            validation_errors.append(
-                InitErrorDetails(
-                    type=PydanticCustomError(
-                        "value_error",
-                        "The POWER_SERVICE_LOCATION target value may not be empty.",
-                    ),
-                    loc=("targets",),
-                    input=self.targets,
-                    ctx={},
-                )
-            )
-
-        if not all(re.fullmatch(r"^\d{18}$", v) for v in power_service_location.values):
-            validation_errors.append(
-                InitErrorDetails(
-                    type=PydanticCustomError(
-                        "value_error",
-                        "The POWER_SERVICE_LOCATION target value must be a list of 'EAN18' values.",
-                    ),
-                    loc=("targets",),
-                    input=self.targets,
-                    ctx={},
-                )
-            )
-
-        if len(ven_name.values) == 0:
-            validation_errors.append(
-                InitErrorDetails(
-                    type=PydanticCustomError(
-                        "value_error",
-                        "The VEN_NAME target value may not be empty.",
-                    ),
-                    loc=("targets",),
-                    input=self.targets,
-                    ctx={},
-                )
-            )
-
-        if not all(1 <= len(v) <= 128 for v in ven_name.values):  # noqa: PLR2004
-            validation_errors.append(
-                InitErrorDetails(
-                    type=PydanticCustomError(
-                        "value_error",
-                        "The VEN_NAME target value must be a list of 'VEN name' values (between 1 and 128 characters).",
-                    ),
-                    loc=("targets",),
-                    input=self.targets,
-                    ctx={},
-                )
-            )
 
     return validation_errors
 
@@ -308,33 +210,33 @@ def _event_interval_gac_compliant(self: Event) -> list[InitErrorDetails]:
                 ctx={},
             )
         )
-
-    if not all(curr.id > prev.id for prev, curr in pairwise(self.intervals)):
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The event interval must have an id value that is strictly increasing.",
-                ),
-                loc=("intervals",),
-                input=self.intervals,
-                ctx={},
-            )
-        )
-
-    for interval in self.intervals:
-        if interval.payloads is None:
+    else:
+        if not all(curr.id > prev.id for prev, curr in pairwise(self.intervals)):
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
                         "value_error",
-                        "The event interval must have a payload.",
+                        "The event interval must have an id value that is strictly increasing.",
                     ),
                     loc=("intervals",),
                     input=self.intervals,
                     ctx={},
                 )
             )
+
+        for interval in self.intervals:
+            if interval.payloads is None:
+                validation_errors.append(
+                    InitErrorDetails(
+                        type=PydanticCustomError(
+                            "value_error",
+                            "The event interval must have a payload.",
+                        ),
+                        loc=("intervals",),
+                        input=self.intervals,
+                        ctx={},
+                    )
+                )
 
         if len(interval.payloads) != 1:
             validation_errors.append(

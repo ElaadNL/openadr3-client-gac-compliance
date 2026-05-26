@@ -2,29 +2,29 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""GAC compliance plugin for OpenADR3 client."""
+"""GAC 2.1 compliance plugin for OpenADR3 client."""
 
 from typing import Any
 
-from openadr3_client.oadr301.models.event.event import Event
-from openadr3_client.oadr301.models.program.program import Program
-from openadr3_client.oadr301.models.ven.ven import Ven
+from openadr3_client.oadr310.models.event.event import Event
+from openadr3_client.oadr310.models.program.program import Program
+from openadr3_client.oadr310.models.ven.ven import Ven
 from openadr3_client.plugin import ValidatorPlugin
 
-from openadr3_client_gac_compliance.gac20.event_gac_compliant import validate_event_gac_compliant
-from openadr3_client_gac_compliance.gac20.program_gac_compliant import validate_program_gac_compliant
-from openadr3_client_gac_compliance.gac20.ven_gac_compliant import validate_ven_gac_compliant
+from openadr3_client_gac_compliance.gac21.event_gac_compliant import validate_event_gac_compliant
+from openadr3_client_gac_compliance.gac21.program_gac_compliant import validate_program_gac_compliant
+from openadr3_client_gac_compliance.gac21.ven_gac_compliant import validate_ven_gac_compliant
 
 
-class Gac20ValidatorPlugin(ValidatorPlugin):
-    """Plugin that validates OpenADR3 models for GAC 2.0 compliance."""
+class Gac21ValidatorPlugin(ValidatorPlugin):
+    """Plugin that validates OpenADR3 models for GAC 2.1 compliance."""
 
     def __init__(self) -> None:
         """Initialize the GAC validator plugin."""
         super().__init__()
 
     @staticmethod
-    def setup(*_args: Any, **_kwargs: Any) -> "Gac20ValidatorPlugin":  # noqa: ANN401
+    def setup(*_args: Any, **_kwargs: Any) -> "Gac21ValidatorPlugin":  # noqa: ANN401
         """
         Set up the GAC validator plugin.
 
@@ -38,7 +38,7 @@ class Gac20ValidatorPlugin(ValidatorPlugin):
             GacValidatorPlugin: Configured plugin instance.
 
         """
-        plugin = Gac20ValidatorPlugin()
+        plugin = Gac21ValidatorPlugin()
 
         plugin.register_model_validator(Event, validate_event_gac_compliant)
         plugin.register_model_validator(Program, validate_program_gac_compliant)
