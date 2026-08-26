@@ -37,8 +37,6 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.9.22"
-          # Caching disabled: a poisoned cache could taint the release build.
-          enable-cache: false
 
       - name: Build release distributions
         run: uv build
