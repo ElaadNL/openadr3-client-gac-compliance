@@ -25,7 +25,7 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
     """
     validation_errors: list[InitErrorDetails] = []
 
-    program_type_regex = r"^DSO_CPO_INTERFACE-2\.1\.1$"
+    program_type_regex = r"^DSO_CPO_INTERFACE-2\.2\.0$"
 
     attributes = program.attributes
 
