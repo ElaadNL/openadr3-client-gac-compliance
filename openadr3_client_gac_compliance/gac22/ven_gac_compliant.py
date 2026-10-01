@@ -11,6 +11,7 @@ from pydantic_core import InitErrorDetails, PydanticCustomError
 EAN18_REGEX = r"^\d{18}$"
 EAN13_LENGTH = 13
 
+
 def _has_valid_check_digit(value: str) -> bool:
     """
     Validates the trailing check digit of an EAN.
@@ -23,6 +24,7 @@ def _has_valid_check_digit(value: str) -> bool:
     *body, check_digit = digits
     weighted = sum(digit * (3 if index % 2 == 0 else 1) for index, digit in enumerate(reversed(body)))
     return (10 - weighted % 10) % 10 == check_digit
+
 
 def _is_ean(value: object, length: int) -> bool:
     """Validates that the value is an EAN of the given length, with a valid check digit."""
@@ -39,6 +41,7 @@ def _is_ean(value: object, length: int) -> bool:
 def is_ean13(value: object) -> bool:
     """Validates that the value is the EAN13 code of a market party, such as a DSO or a Service Provider."""
     return _is_ean(value, EAN13_LENGTH)
+
 
 def _get_ven_targets(ven: Ven) -> tuple[str, ...]:
     """Return the targets of the VEN if they are present on the model."""
