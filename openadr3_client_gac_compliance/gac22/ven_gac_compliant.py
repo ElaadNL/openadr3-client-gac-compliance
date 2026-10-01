@@ -4,7 +4,6 @@
 
 import re
 
-import pycountry
 from openadr3_client.oadr310.models.ven.ven import NewVenBlRequest, ServerVen, Ven
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
