@@ -104,20 +104,5 @@ def validate_ven_gac_compliant(ven: Ven) -> list[InitErrorDetails] | None:
             )
         )
 
-    alpha_2_country = pycountry.countries.get(alpha_2=ven.ven_name[:2])
-
-    if alpha_2_country is None:
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The first two characters of the VEN name must be a valid ISO 3166-1 alpha-2 country code.",
-                ),
-                loc=("ven_name",),
-                input=ven.ven_name,
-                ctx={},
-            )
-        )
-
     validation_errors.extend(_targets_compliant(ven))
     return validation_errors or None
