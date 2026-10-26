@@ -35,13 +35,13 @@ source = "vcs"
 
 [dependency-groups]
 dev = [
-    "mypy>=2.1.0,<3",
-    "ruff>=0.15.17,<0.16",
-    "pytest>=9.1.0,<10",
+    "mypy>=2.4.0,<3",
+    "ruff>=0.17.1,<0.18",
+    "pytest>=9.1.1,<10",
     "pytest-cov>=6.1.1,<8",
     "taskipy>=1.14.1,<2",
     "reuse>=6.2.0",
-    "pre-commit>=4.6.0",
+    "pre-commit>=4.7.0",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -91,6 +91,7 @@ ignore = [
     # From:https://github.com/wemake-services/wemake-django-template/blob/master/pyproject.toml
     "A005",   # allow to shadow stdlib and builtin module names
     "COM812", # trailing comma, conflicts with `ruff format`
+    "CPY001", # copyright headers are checked by `reuse lint`
     # Different doc rules that we don't really care about:
     "D100",
     "D104",
