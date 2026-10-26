@@ -19,13 +19,13 @@ This repository contains a plugin for the [OpenADR3-client](https://github.com/E
 Registering the plugin is done using the global ValidatorPluginRegistry class:
 
 ```python
-    from openadr3_client.plugin import ValidatorPluginRegistry, ValidatorPlugin
-    from openadr3_client_gac_compliance.gac20.plugin import Gac20ValidatorPlugin
-    from openadr3_client_gac_compliance.gac21.plugin import Gac21ValidatorPlugin
+from openadr3_client.plugin import ValidatorPluginRegistry, ValidatorPlugin
+from openadr3_client_gac_compliance.gac20.plugin import Gac20ValidatorPlugin
+from openadr3_client_gac_compliance.gac21.plugin import Gac21ValidatorPlugin
 
-    ValidatorPluginRegistry.register_plugin(
-        Gac21ValidatorPlugin().setup() # Depending on which version of GAC you are testing, register either the GAC20 or GAC21 plugin.
-    )
+ValidatorPluginRegistry.register_plugin(
+    Gac21ValidatorPlugin().setup()  # Depending on which version of GAC you are testing, register either the GAC20 or GAC21 plugin.
+)
 ```
 
 ## License
