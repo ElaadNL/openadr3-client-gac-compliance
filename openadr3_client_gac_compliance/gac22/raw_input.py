@@ -7,8 +7,8 @@ Raw-input checks for GAC 2.2 section 9.1.5.
 
 Plugin validators run on the parsed pydantic model, where "P1D" and "PT24H" are the same timedelta and
 "Z" and "+00:00" the same datetime. The two rules below can therefore only be checked on the raw JSON,
-before it is parsed. Callers run these functions on the raw dict and merge the result with the plugin errors,
-or raise it with ValidationError.from_exception_data. They are deliberately not registered in the plugin.
+before it is parsed. Callers run these functions on the raw dict before parsing, and raise the result with
+ValidationError.from_exception_data or report it. They are deliberately not registered in the plugin.
 
 Field names are camelCase, as the VTN returns them. Absent, null and non-string values are skipped: the
 model parser reports those.

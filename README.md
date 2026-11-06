@@ -31,7 +31,7 @@ ValidatorPluginRegistry.register_plugin(
 
 ### GAC 2.2: raw-input checks
 
-GAC 2.2 section 9.1.5 forbids days in durations (`P1D`, use `PT24H`) and requires timestamps in UTC with the `Z` notation. The plugin validators run on the parsed model, where `P1D` and `PT24H` are the same `timedelta` and `Z` and `+00:00` are the same `datetime`, so these two rules cannot be checked there. Run the raw-input functions on the raw JSON before parsing it, and merge their errors with the plugin's:
+GAC 2.2 section 9.1.5 forbids days in durations (`P1D`, use `PT24H`) and requires timestamps in UTC with the `Z` notation. The plugin validators run on the parsed model, where `P1D` and `PT24H` are the same `timedelta` and `Z` and `+00:00` are the same `datetime`, so these two rules cannot be checked there. Run the raw-input functions on the raw JSON before parsing it, and raise or report their errors:
 
 ```python
 from pydantic import ValidationError
@@ -44,6 +44,22 @@ if errors:
 ```
 
 `validate_raw_program` and `validate_raw_ven` work the same way. They are deliberately not registered in the plugin.
+
+### Changes in GAC 2.2.0
+
+gac22 now rejects:
+
+- Targets without the `EAN` prefix (a bare 18 digits).
+- Missing or empty event and VEN targets.
+- A RETAILER_NAME that is not exactly one of the six DSO EAN13 codes.
+- BINDING_EVENTS that is not literally `true`.
+- Events whose intervals do not cover two local calendar days (Europe/Amsterdam).
+
+gac22 now accepts:
+
+- A `priority` on the event.
+- Several payloads or values per interval.
+- Several payload descriptors, including ones that are not IMPORT_CAPACITY_LIMIT.
 
 ## License
 
