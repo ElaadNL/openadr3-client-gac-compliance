@@ -2,12 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import re
-
 from openadr3_client.oadr310.models.ven.ven import NewVenBlRequest, ServerVen, Ven
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
-EAN18_REGEX = r"^\d{18}$"
+from openadr3_client_gac_compliance.gac22.identifiers import is_grid_connection_identifier
+
 EAN13_LENGTH = 13
 
 
@@ -42,51 +41,42 @@ def is_ean13(value: object) -> bool:
     return _is_ean(value, EAN13_LENGTH)
 
 
-def _get_ven_targets(ven: Ven) -> tuple[str, ...]:
-    """Return the targets of the VEN if they are present on the model."""
-    if not isinstance(ven, ServerVen | NewVenBlRequest):
-        return ()
-
-    return ven.targets or ()
-
-
 def _targets_compliant(ven: Ven) -> list[InitErrorDetails]:
     """
     Validates that the targets of the VEN are GAC compliant.
 
-    The following constraints are enforced for targets:
-
-    - The targets value must be a list of 'EAN18' values.
+    Only VENs that can carry targets are checked: a VEN client request has no targets field, because
+    targets are assigned by a BL client. For the others, the targets must be a non-empty list of grid
+    connection identifiers.
     """
-    validation_errors: list[InitErrorDetails] = []
+    if not isinstance(ven, ServerVen | NewVenBlRequest):
+        return []
 
-    targets = _get_ven_targets(ven)
+    targets = ven.targets
+    if targets and all(is_grid_connection_identifier(target) for target in targets):
+        return []
 
-    if not all(re.fullmatch(EAN18_REGEX, target) for target in targets):
-        validation_errors.append(
-            InitErrorDetails(
-                type=PydanticCustomError(
-                    "value_error",
-                    "The targets value must be a list of 'EAN18' values.",
-                ),
-                loc=("targets",),
-                input=targets,
-                ctx={},
-            )
+    return [
+        InitErrorDetails(
+            type=PydanticCustomError(
+                "value_error",
+                "The targets value must be a non-empty list of grid connection identifiers, "
+                "each 'EAN' followed by 18 digits.",
+            ),
+            loc=("targets",),
+            input=targets,
+            ctx={},
         )
-
-    return validation_errors
+    ]
 
 
 def validate_ven_gac_compliant(ven: Ven) -> list[InitErrorDetails] | None:
     """
-    Validates that the VEN is GAC 2.1 compliant.
+    Validates that the VEN is GAC 2.2 compliant.
 
     The following constraints are enforced for VENs:
-    - The VEN must have a VEN name
-    - The VEN name must be an eMI3 identifier.
-    - When present, the targets must be a list of 'EAN18' values.
-
+    - The VEN name must be an EAN13 with a valid check digit.
+    - A VEN that can carry targets must have a non-empty list of grid connection identifiers.
     """
     validation_errors: list[InitErrorDetails] = []
 
