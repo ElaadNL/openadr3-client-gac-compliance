@@ -59,7 +59,7 @@ gac22 now accepts:
 
 - A `priority` on the event.
 - Several payloads or values per interval.
-- Several payload descriptors, including ones that are not IMPORT_CAPACITY_LIMIT.
+- Several payload descriptors, as long as each is IMPORT_CAPACITY_LIMIT in KW.
 
 ## License
 

@@ -55,7 +55,7 @@ def test_event_targets_invalid(targets: tuple[str, ...] | None) -> None:
 
 
 def test_two_valid_descriptors_pass() -> None:
-    """The event may describe more than one payload type, as long as each is IMPORT_CAPACITY_LIMIT in KW."""
+    """The event may carry more than one descriptor, as long as each is IMPORT_CAPACITY_LIMIT in KW."""
     event = continuous_event(START, 48, payload_descriptors=(ICL_DESCRIPTOR, ICL_DESCRIPTOR))
 
     assert event.payload_descriptors is not None
@@ -76,16 +76,26 @@ def test_descriptor_wrong_units_fails() -> None:
         continuous_event(START, 48, payload_descriptors=(descriptor,))
 
 
-def test_icl_and_price_payloads_with_descriptors_pass() -> None:
-    """Descriptors of other payload types next to the IMPORT_CAPACITY_LIMIT/KW one are allowed."""
+def test_price_descriptor_next_to_icl_fails() -> None:
+    """A descriptor of another payload type is rejected, even next to a valid IMPORT_CAPACITY_LIMIT one."""
     price_descriptor = EventPayloadDescriptor(payload_type=EventPayloadType.PRICE, units=Unit.KWH)
     price = EventPayload(type=EventPayloadType.PRICE, values=(1.0,))
     intervals = tuple(Interval(id=i, payloads=(icl_payload(), price)) for i in range(48))
 
-    event = continuous_event(START, 48, intervals=intervals, payload_descriptors=(ICL_DESCRIPTOR, price_descriptor))
+    with pytest.raises(ValidationError, match="Every payload descriptor must have payload type"):
+        continuous_event(START, 48, intervals=intervals, payload_descriptors=(ICL_DESCRIPTOR, price_descriptor))
 
-    assert event.payload_descriptors is not None
-    assert len(event.payload_descriptors) == 2
+
+def test_misspelled_descriptor_next_to_icl_fails() -> None:
+    """A misspelled payload type is not hidden by a valid IMPORT_CAPACITY_LIMIT descriptor next to it."""
+    fields = continuous_event(START, 48).model_dump(by_alias=True, mode="json")
+    fields["payloadDescriptors"] = [
+        {"objectType": "EVENT_PAYLOAD_DESCRIPTOR", "payloadType": "IMPORT_CAPACITY_LIMIT", "units": "KW"},
+        {"objectType": "EVENT_PAYLOAD_DESCRIPTOR", "payloadType": "IMPORT_CAP_LI", "units": "KW"},
+    ]
+
+    with pytest.raises(ValidationError, match="Every payload descriptor must have payload type"):
+        NewEvent.model_validate(fields)
 
 
 def test_single_non_icl_descriptor_fails() -> None:
