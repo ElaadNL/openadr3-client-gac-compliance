@@ -7,7 +7,7 @@ from typing import Any
 
 from openadr3_client._models.common.interval import Interval
 from openadr3_client._models.common.interval_period import IntervalPeriod
-from openadr3_client.oadr310.models.event.event import NewEvent
+from openadr3_client.oadr310.models.event.event import ExistingEvent, NewEvent
 from openadr3_client.oadr310.models.event.event_payload import (
     EventPayload,
     EventPayloadDescriptor,
@@ -58,3 +58,14 @@ def separated_event(spans: list[tuple[datetime, timedelta]], **overrides: Any) -
         for i, (start, duration) in enumerate(spans)
     )
     return _event(**{"interval_period": None, "intervals": intervals, **overrides})
+
+
+def existing_event(start: datetime, hours: int, created: datetime) -> ExistingEvent:
+    """A continuous event as the VTN returns it, published at `created`."""
+    event = continuous_event(start, hours)
+    return ExistingEvent(
+        **event.model_dump(by_alias=True),
+        id="test-event-id",
+        created_date_time=created,
+        modification_date_time=created,
+    )

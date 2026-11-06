@@ -18,6 +18,7 @@ from openadr3_client.oadr310.models.event.event import Event
 from openadr3_client.oadr310.models.event.event_payload import EventPayloadType
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
+from openadr3_client_gac_compliance.gac22.event_coverage import coverage_errors
 from openadr3_client_gac_compliance.gac22.identifiers import is_grid_connection_identifier
 
 INTERVAL_PERIOD_ERROR_MESSAGE = "'interval_period' must either be set on the event-level, or for each interval."
@@ -215,10 +216,14 @@ def validate_event_gac_compliant(event: Event) -> list[InitErrorDetails] | None:
     The following constraints are enforced for events:
 
     - The event must have either a continuous or separated interval definition.
+    - The intervals must together cover the two local calendar days after publication.
     """
     validation_errors: list[InitErrorDetails] = []
 
     errors = _continuous_or_separated(event)
+    validation_errors.extend(errors)
+
+    errors = coverage_errors(event)
     validation_errors.extend(errors)
 
     errors = _targets_compliant(event)
