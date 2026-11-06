@@ -22,11 +22,28 @@ Registering the plugin is done using the global ValidatorPluginRegistry class:
 from openadr3_client.plugin import ValidatorPluginRegistry, ValidatorPlugin
 from openadr3_client_gac_compliance.gac20.plugin import Gac20ValidatorPlugin
 from openadr3_client_gac_compliance.gac21.plugin import Gac21ValidatorPlugin
+from openadr3_client_gac_compliance.gac22.plugin import Gac22ValidatorPlugin
 
 ValidatorPluginRegistry.register_plugin(
-    Gac21ValidatorPlugin().setup()  # Depending on which version of GAC you are testing, register either the GAC20 or GAC21 plugin.
+    Gac21ValidatorPlugin().setup()  # Depending on which version of GAC you are testing, register either the GAC20, GAC21 or GAC22 plugin.
 )
 ```
+
+### GAC 2.2: raw-input checks
+
+GAC 2.2 section 9.1.5 forbids days in durations (`P1D`, use `PT24H`) and requires timestamps in UTC with the `Z` notation. The plugin validators run on the parsed model, where `P1D` and `PT24H` are the same `timedelta` and `Z` and `+00:00` are the same `datetime`, so these two rules cannot be checked there. Run the raw-input functions on the raw JSON before parsing it, and merge their errors with the plugin's:
+
+```python
+from pydantic import ValidationError
+from openadr3_client_gac_compliance.gac22 import validate_raw_event
+
+raw_event = response.json()  # the dict as returned by the VTN, not yet parsed
+errors = validate_raw_event(raw_event)
+if errors:
+    raise ValidationError.from_exception_data("Event", errors)
+```
+
+`validate_raw_program` and `validate_raw_ven` work the same way. They are deliberately not registered in the plugin.
 
 ## License
 
