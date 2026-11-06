@@ -85,12 +85,8 @@ def _expected_window(event: Event, first_start: datetime) -> Span:
     return two_day_window(first_start.astimezone(LOCAL_TIMEZONE).date())
 
 
-def coverage_errors(event: Event) -> list[InitErrorDetails]:
-    """Validate that the intervals of the event together cover exactly the expected two-day local window."""
-    spans = _interval_spans(event)
-    if not spans:
-        return []
-
+def _covers_window(event: Event, spans: list[Span]) -> bool:
+    """Return whether the spans, and the event duration when set, match the expected window exactly."""
     covered = _merge(spans)
     first_start = covered[0][0]
     window = _expected_window(event, first_start)
@@ -99,7 +95,22 @@ def coverage_errors(event: Event) -> list[InitErrorDetails]:
     # covers the window if that span matches it as well.
     duration_matches = event.duration is None or (first_start, first_start + event.duration) == window
 
-    if covered == [window] and duration_matches:
+    return covered == [window] and duration_matches
+
+
+def coverage_errors(event: Event) -> list[InitErrorDetails]:
+    """Validate that the intervals of the event together cover exactly the expected two-day local window."""
+    try:
+        spans = _interval_spans(event)
+        if not spans:
+            return []
+        covers = _covers_window(event, spans)
+    except OverflowError:
+        # OpenADR uses durations such as P9999Y to mean "repeat indefinitely", and adding one to a start
+        # runs past datetime.max. Such a span cannot equal a two-day window, so it is a coverage failure.
+        covers = False
+
+    if covers:
         return []
 
     return [

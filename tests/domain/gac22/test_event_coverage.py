@@ -109,3 +109,15 @@ def test_created_late_utc_is_next_local_day() -> None:
     with pytest.raises(ValidationError, match=COVERAGE_ERROR):
         existing_event(START, 48, created=created)
     existing_event(START + 24 * HOUR, 48, created=created)
+
+
+def test_indefinite_event_duration_fails() -> None:
+    """A P9999Y duration runs past the largest datetime and is reported as a coverage failure, not a crash."""
+    with pytest.raises(ValidationError, match=COVERAGE_ERROR):
+        continuous_event(START, 48, duration=timedelta(days=9999 * 365))
+
+
+def test_interval_span_past_datetime_max_fails() -> None:
+    """An interval duration that overflows the span arithmetic is reported as a coverage failure."""
+    with pytest.raises(ValidationError, match=COVERAGE_ERROR):
+        separated_event([(START, timedelta(days=9999 * 365))])
