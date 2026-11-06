@@ -116,7 +116,9 @@ def _payload_descriptors_gac_compliant(
     The following constraints are enforced for payload descriptors:
 
     - The event must have at least one payload descriptor.
-    - Every payload descriptor must have payload type 'IMPORT_CAPACITY_LIMIT' and units 'KW' (case sensitive).
+    - At least one descriptor must have payload type 'IMPORT_CAPACITY_LIMIT'.
+    - Every 'IMPORT_CAPACITY_LIMIT' descriptor must have units 'KW' (case sensitive). Descriptors of other
+      payload types are allowed.
     """
     descriptors = self.payload_descriptors
 
@@ -133,15 +135,16 @@ def _payload_descriptors_gac_compliant(
             )
         ]
 
-    if all(d.payload_type == EventPayloadType.IMPORT_CAPACITY_LIMIT and d.units == "KW" for d in descriptors):
+    icl_descriptors = [d for d in descriptors if d.payload_type == EventPayloadType.IMPORT_CAPACITY_LIMIT]
+    if icl_descriptors and all(d.units == "KW" for d in icl_descriptors):
         return []
 
     return [
         InitErrorDetails(
             type=PydanticCustomError(
                 "value_error",
-                "Every payload descriptor must have payload type 'IMPORT_CAPACITY_LIMIT' "
-                "and units 'KW' (case sensitive).",
+                "The event must have a payload descriptor with payload type 'IMPORT_CAPACITY_LIMIT' "
+                "and units 'KW' (case sensitive), and every 'IMPORT_CAPACITY_LIMIT' descriptor must use units 'KW'.",
             ),
             loc=("payload_descriptors",),
             input=descriptors,

@@ -86,6 +86,12 @@ def test_event_duration_shortening_fails() -> None:
         continuous_event(START, 48, duration=timedelta(hours=24))
 
 
+def test_event_duration_longer_than_intervals_fails() -> None:
+    """An event duration beyond the intervals does not extend coverage, so a 24 hour event stays short."""
+    with pytest.raises(ValidationError, match=COVERAGE_ERROR):
+        continuous_event(START, 24, duration=timedelta(hours=48))
+
+
 def test_event_duration_matching_passes() -> None:
     """An event duration equal to the window leaves the coverage intact."""
     continuous_event(START, 48, duration=timedelta(hours=48))

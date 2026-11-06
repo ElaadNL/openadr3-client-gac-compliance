@@ -54,9 +54,20 @@ def test_retailer_name_each_dso_code_passes(code: str) -> None:
     assert program.attributes is not None
 
 
-@pytest.mark.parametrize("values", [("LIANDER",), ("8716871000002", "LIANDER"), ()])
+@pytest.mark.parametrize(
+    "values",
+    [
+        ("LIANDER",),
+        ("8716871000002", "LIANDER"),
+        (),
+        ({"a": 1},),
+        ([1],),
+        ("8716871000002", "8712423014022"),
+    ],
+    ids=["unknown-code", "valid-plus-unknown", "empty", "dict", "list", "two-valid-codes"],
+)
 def test_retailer_name_invalid(values: tuple[Any, ...]) -> None:
-    """RETAILER_NAME must be non-empty and consist solely of DSO EAN13 codes."""
+    """RETAILER_NAME must be exactly one string, and that string a DSO EAN13 code; unhashable values must not crash."""
     with pytest.raises(ValidationError, match=re.escape("EAN13 code of a Dutch DSO")):
         _ = _create_program(retailer_name=values)
 
@@ -78,6 +89,12 @@ def test_program_type_211_fails() -> None:
     """The previous spec version is rejected."""
     with pytest.raises(ValidationError, match=re.escape("DSO_CPO_INTERFACE-2.2.0")):
         _ = _create_program(program_type=("DSO_CPO_INTERFACE-2.1.1",))
+
+
+def test_program_type_multiple_values_fails() -> None:
+    """PROGRAM_TYPE must be exactly the 2.2.0 value; an extra value next to it is rejected."""
+    with pytest.raises(ValidationError, match=re.escape("DSO_CPO_INTERFACE-2.2.0")):
+        _ = _create_program(program_type=("DSO_CPO_INTERFACE-2.2.0", "other"))
 
 
 def test_missing_program_type() -> None:

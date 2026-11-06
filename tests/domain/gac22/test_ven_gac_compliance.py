@@ -5,7 +5,7 @@
 from datetime import UTC, datetime
 
 import pytest
-from openadr3_client.oadr310.models.ven.ven import ExistingVen, NewVenVenRequest
+from openadr3_client.oadr310.models.ven.ven import ExistingVen, NewVenBlRequest, NewVenVenRequest
 from pydantic import ValidationError
 
 VALID_TARGET = "EAN876543211234567890"
@@ -65,3 +65,12 @@ def test_ven_name_invalid_check_digit() -> None:
     """The VEN name must be an EAN13 with a valid check digit."""
     with pytest.raises(ValidationError, match="EAN13"):
         _create_existing_ven(ven_name="8712345678901")
+
+
+def test_ven_bl_request_targets_checked() -> None:
+    """A business-logic VEN request carries targets, so they are checked like an existing VEN's."""
+    ven = NewVenBlRequest(ven_name=VALID_VEN_NAME, clientID="test-client", targets=(VALID_TARGET,))
+    assert ven.targets == (VALID_TARGET,)
+
+    with pytest.raises(ValidationError, match="grid connection identifiers"):
+        NewVenBlRequest(ven_name=VALID_VEN_NAME, clientID="test-client", targets=("876543211234567890",))

@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from openadr3_client._models.common.interval import Interval
 from openadr3_client._models.common.interval_period import IntervalPeriod
+from openadr3_client.oadr310.models.event.event import NewEvent
 from openadr3_client.oadr310.models.event.event_payload import (
     EventPayload,
     EventPayloadDescriptor,
@@ -73,6 +74,37 @@ def test_descriptor_wrong_units_fails() -> None:
 
     with pytest.raises(ValidationError, match="units 'KW'"):
         continuous_event(START, 48, payload_descriptors=(descriptor,))
+
+
+def test_icl_and_price_payloads_with_descriptors_pass() -> None:
+    """Descriptors of other payload types next to the IMPORT_CAPACITY_LIMIT/KW one are allowed."""
+    price_descriptor = EventPayloadDescriptor(payload_type=EventPayloadType.PRICE, units=Unit.KWH)
+    price = EventPayload(type=EventPayloadType.PRICE, values=(1.0,))
+    intervals = tuple(Interval(id=i, payloads=(icl_payload(), price)) for i in range(48))
+
+    event = continuous_event(START, 48, intervals=intervals, payload_descriptors=(ICL_DESCRIPTOR, price_descriptor))
+
+    assert event.payload_descriptors is not None
+    assert len(event.payload_descriptors) == 2
+
+
+def test_single_non_icl_descriptor_fails() -> None:
+    """Without an IMPORT_CAPACITY_LIMIT descriptor the event is rejected."""
+    descriptor = EventPayloadDescriptor(payload_type=EventPayloadType.PRICE, units=Unit.KWH)
+
+    with pytest.raises(ValidationError, match="payload type 'IMPORT_CAPACITY_LIMIT' and units 'KW'"):
+        continuous_event(START, 48, payload_descriptors=(descriptor,))
+
+
+def test_descriptor_lowercase_units_fails() -> None:
+    """Units are case sensitive: 'kW' is not 'KW'."""
+    fields = continuous_event(START, 48).model_dump(by_alias=True, mode="json")
+    fields["payloadDescriptors"] = [
+        {"objectType": "EVENT_PAYLOAD_DESCRIPTOR", "payloadType": "IMPORT_CAPACITY_LIMIT", "units": "kW"}
+    ]
+
+    with pytest.raises(ValidationError, match="units 'KW'"):
+        NewEvent.model_validate(fields)
 
 
 def test_wrong_payload_type_in_first_interval_fails() -> None:

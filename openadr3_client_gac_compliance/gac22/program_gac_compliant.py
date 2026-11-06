@@ -17,7 +17,7 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
 
     The following constraints are enforced for programs (all in the `attributes` field):
     - The program must have a `RETAILER_NAME` attribute.
-    - Every `RETAILER_NAME` value must be the EAN13 code of a Dutch DSO.
+    - The `RETAILER_NAME` attribute must hold exactly one value, the EAN13 code of the issuing Dutch DSO.
     - The program MUST have a `PROGRAM_TYPE` attribute.
     - The `PROGRAM_TYPE` value MUST equal "DSO_CPO_INTERFACE-2.2.0".
     - The program MUST have a `BINDING_EVENTS` attribute set to exactly one value, the boolean true.
@@ -44,7 +44,9 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
         )
     else:
         retailer_names = retailer_name_attr.values
-        if not retailer_names or not all(name in DSO_IDENTIFIERS for name in retailer_names):
+        # isinstance guard: values are untyped JSON, and an unhashable one would crash the set lookup.
+        retailer_name = retailer_names[0] if len(retailer_names) == 1 else None
+        if not isinstance(retailer_name, str) or retailer_name not in DSO_IDENTIFIERS:
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(
@@ -84,7 +86,7 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
         )
 
     binding_events_attr = attributes.get_by_type(ProgramAttributeType.BINDING_EVENTS) if attributes else None
-    # `is True` so that 1 or "true" are not mistaken for the boolean.
+    # `is True` guards against the library ever coercing other values (1, "true") to a truthy bool.
     if binding_events_attr is None or len(binding_events_attr.values) != 1 or binding_events_attr.values[0] is not True:
         validation_errors.append(
             InitErrorDetails(
