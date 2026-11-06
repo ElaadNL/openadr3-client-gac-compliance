@@ -44,9 +44,10 @@ def validate_program_gac_compliant(program: Program) -> list[InitErrorDetails] |
         )
     else:
         retailer_names = retailer_name_attr.values
+        has_single_value = len(retailer_names) == 1
         # isinstance guard: values are untyped JSON, and an unhashable one would crash the set lookup.
-        retailer_name = retailer_names[0] if len(retailer_names) == 1 else None
-        if not isinstance(retailer_name, str) or retailer_name not in DSO_IDENTIFIERS:
+        is_dso_code = has_single_value and isinstance(retailer_names[0], str) and retailer_names[0] in DSO_IDENTIFIERS
+        if not is_dso_code:
             validation_errors.append(
                 InitErrorDetails(
                     type=PydanticCustomError(

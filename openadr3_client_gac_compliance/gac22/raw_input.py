@@ -15,32 +15,41 @@ model parser reports those.
 """
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Final, LiteralString
 
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
-DAYS_ERROR_MESSAGE = "Durations must not use days, such as 'P1D'. Use hours instead, such as 'PT24H'."
-ZULU_ERROR_MESSAGE = "Timestamps must be in UTC with the 'Z' notation."
+DAYS_ERROR_MESSAGE: Final = "Durations must not use days, such as 'P1D'. Use hours instead, such as 'PT24H'."
+ZULU_ERROR_MESSAGE: Final = "Timestamps must be in UTC with the 'Z' notation."
 
 _AUDIT_TIMESTAMP_FIELDS = ("createdDateTime", "modificationDateTime")
 
 
-def _error(message: str, loc: tuple[str | int, ...], value: str) -> InitErrorDetails:
+def _error(message: LiteralString, loc: tuple[str | int, ...], value: str) -> InitErrorDetails:
     return InitErrorDetails(type=PydanticCustomError("value_error", message), loc=loc, input=value, ctx={})
 
 
 def _duration_errors(value: object, loc: tuple[str | int, ...]) -> list[InitErrorDetails]:
     if not isinstance(value, str):
         return []
+
+    # The day designator belongs to the date part of an ISO 8601 duration, before the 'T'.
     date_part = value.split("T", 1)[0]
-    return [_error(DAYS_ERROR_MESSAGE, loc, value)] if "D" in date_part else []
+    uses_days = "D" in date_part
+    if uses_days:
+        return [_error(DAYS_ERROR_MESSAGE, loc, value)]
+    return []
 
 
 def _timestamp_errors(value: object, loc: tuple[str | int, ...]) -> list[InitErrorDetails]:
     if not isinstance(value, str):
         return []
+
     # RFC 3339 allows a lowercase 'z'.
-    return [] if value.endswith(("Z", "z")) else [_error(ZULU_ERROR_MESSAGE, loc, value)]
+    is_zulu = value.endswith(("Z", "z"))
+    if not is_zulu:
+        return [_error(ZULU_ERROR_MESSAGE, loc, value)]
+    return []
 
 
 def _audit_timestamp_errors(data: Mapping[str, Any]) -> list[InitErrorDetails]:
