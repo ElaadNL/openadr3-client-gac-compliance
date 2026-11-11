@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""GAC 2.1 compliance plugin for OpenADR3 client."""
+"""GAC 2.2 compliance plugin for OpenADR3 client."""
 
 from typing import Any
 
@@ -29,13 +29,11 @@ class Gac22ValidatorPlugin(ValidatorPlugin):
         Set up the GAC validator plugin.
 
         Args:
-            *args: Positional arguments (unused).
-            **kwargs: Keyword arguments containing configuration.
-                     Expected keys:
-                     - gac_version: The GAC version to validate against.
+            *_args: Positional arguments (unused).
+            **_kwargs: Keyword arguments (unused).
 
         Returns:
-            GacValidatorPlugin: Configured plugin instance.
+            Gac22ValidatorPlugin: Configured plugin instance.
 
         """
         plugin = Gac22ValidatorPlugin()
